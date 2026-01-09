@@ -127,4 +127,4 @@ Contributions are welcome! If you have any ideas, suggestions, or bug reports, p
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+This project is licensed under the BSD-3-Clause license License. See the [LICENSE](LICENSE) file for more details.
