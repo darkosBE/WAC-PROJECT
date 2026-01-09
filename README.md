@@ -20,119 +20,82 @@ This project is a web-based client for managing AFK bots on a Minecraft server. 
 
 ## Installation Guide
 
-This guide provides instructions for setting up both the **Backend** and **Frontend** services on different operating systems.
+This guide provides instructions for setting up both the **Backend** and **Frontend** services. You must have both running for the application to work.
 
 ### Prerequisites
 
 *   **Node.js:** Make sure you have Node.js installed. You can download it from [https://nodejs.org/](https://nodejs.org/).
 *   **Git:** You will need Git to clone the repository. You can download it from [https://git-scm.com/](https://git-scm.com/).
 
-### 1. Project Setup
+### 1. Clone the Repository
 
 First, clone the repository to your local machine or VPS:
 
 ```bash
-git clone https://github.com/darkosbe/WAC-PROJECT
+git clone https://github.com/darkosBE/WAC-PROJECT
 cd WAC-PROJECT
 ```
 
-The project is divided into two main parts:
-- **`backend`**: The Node.js server that manages the Minecraft bots.
-- **`frontend-server`**: The React-based web interface for controlling the bots.
-
-You will need to install and run both.
-
 ---
 
-### 2. Backend Installation
+### 2. Backend Setup
 
-The backend service runs on port **1043**.
-
-#### Windows & Linux
+The backend service runs the bot manager on port `1043`.
 
 1.  **Navigate to the backend directory:**
     ```bash
+    # From the root of the project (WAC-PROJECT)
     cd docs/backend
     ```
 
-2.  **Install dependencies:**
+2.  **Install backend dependencies:**
     ```bash
     npm install
     ```
 
 3.  **Start the backend server:**
-    ```bash
-    # This will start the server and log "AFK Console Backend running on http://localhost:1043"
-    npm start
-    ```
-
-#### VPS (with PM2)
-
-For a VPS, it's recommended to use a process manager like `pm2` to keep the server running in the background.
-
-1.  **Navigate to the backend directory:**
-    ```bash
-    cd docs/backend
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-3.  **Install PM2 globally:**
-    ```bash
-    npm install -g pm2
-    ```
-
-4.  **Start the server with PM2:**
-    ```bash
-    pm2 start npm --name "afk-backend" -- start
-    ```
+    *   **For Windows/Linux (Development):**
+        ```bash
+        npm start
+        ```
+    *   **For a VPS (Production with PM2):**
+        ```bash
+        npm install -g pm2
+        pm2 start npm --name "afk-backend" -- start
+        ```
 
 ---
 
-### 3. Frontend Installation
+### 3. Frontend Setup
 
-The frontend service runs on port **8080**.
+The frontend service runs the web interface on port `8080`.
 
-**Important:** Make sure you are in the root directory of the project (`WAC-PROJECT`) before starting.
+1.  **Navigate to the frontend directory (root of the project):**
+    ```bash
+    # If you are in the backend directory, go back to the root
+    cd ../../
+    ```
 
-#### Windows & Linux
-
-1.  **Install dependencies:**
+2.  **Install frontend dependencies:**
     ```bash
     npm install
     ```
 
-2.  **Build the project:**
+3.  **Build the frontend:**
     ```bash
     npm run build
     ```
 
-3.  **Start the frontend server:**
-    ```bash
-    # This will serve the built React application
-    npm start
-    ```
-
-#### VPS (with PM2)
-
-1.  **Install dependencies & Build:**
-    ```bash
-    npm install
-    npm run build
-    ```
-
-2.  **Install PM2 globally (if not already installed):**
-    ```bash
-    npm install -g pm2
-    ```
-
-3.  **Start the server with PM2:**
-    ```bash
-    pm2 start npm --name "afk-frontend" -- start
-    ```
+4.  **Start the frontend server:**
+    *   **For Windows/Linux (Development):**
+        ```bash
+        npm start
+        ```
+    *   **For a VPS (Production with PM2):**
+        ```bash
+        # PM2 should already be installed from the backend step
+        pm2 start npm --name "afk-frontend" -- start
+        ```
 
 ---
 
@@ -143,7 +106,7 @@ Once both the backend and frontend are running, you can access the web client by
 -   **Locally:** `http://localhost:8080`
 -   **On a VPS:** `http://<your-vps-ip>:8080`
 
-Make sure that port `8080` (for the frontend) and `1043` (for the backend) are open on your server's firewall.
+**Important:** Make sure that port `8080` (for the frontend) and `1043` (for the backend) are open on your server's or VPS's firewall.
 
 ## Contributing
 
@@ -151,4 +114,4 @@ Contributions are welcome! If you have any ideas, suggestions, or bug reports, p
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the BSD-3-Clause license. See the [LICENSE](LICENSE) file for more details.
