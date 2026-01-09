@@ -16,110 +16,134 @@ This project is a web-based client for managing AFK bots on a Minecraft server. 
 *   **Live dashboard:** View the status and information of your bots in real-time.
 *   **Proxy support:** Connect your bots through proxies for enhanced privacy and security.
 
-## Installation
+---
 
-### Windows
+## Installation Guide
 
-1.  **Install Node.js:** Download and install Node.js from [https://nodejs.org/](https://nodejs.org/).
-2.  **Clone the repository:**
+This guide provides instructions for setting up both the **Backend** and **Frontend** services on different operating systems.
 
+### Prerequisites
+
+*   **Node.js:** Make sure you have Node.js installed. You can download it from [https://nodejs.org/](https://nodejs.org/).
+*   **Git:** You will need Git to clone the repository. You can download it from [https://git-scm.com/](https://git-scm.com/).
+
+### 1. Project Setup
+
+First, clone the repository to your local machine or VPS:
+
+```bash
+git clone https://github.com/darkosbe/WAC-PROJECT
+cd WAC-PROJECT
+```
+
+The project is divided into two main parts:
+- **`backend`**: The Node.js server that manages the Minecraft bots.
+- **`frontend-server`**: The React-based web interface for controlling the bots.
+
+You will need to install and run both.
+
+---
+
+### 2. Backend Installation
+
+The backend service runs on port **1043**.
+
+#### Windows & Linux
+
+1.  **Navigate to the backend directory:**
     ```bash
-    git clone https://github.com/darkosBE/WAC-PROJECT
+    cd docs/backend
     ```
 
-3.  **Install dependencies:**
-
+2.  **Install dependencies:**
     ```bash
     npm install
     ```
 
-4.  **Build the project:**
-
+3.  **Start the backend server:**
     ```bash
-    npm run build
-    ```
-
-5.  **Start the server:**
-
-    ```bash
+    # This will start the server and log "AFK Console Backend running on http://localhost:1043"
     npm start
     ```
 
-6.  **Open the client:** Open your web browser and navigate to `http://localhost:8080`
+#### VPS (with PM2)
 
-### Linux
+For a VPS, it's recommended to use a process manager like `pm2` to keep the server running in the background.
 
-1.  **Install Node.js:**
-
+1.  **Navigate to the backend directory:**
     ```bash
-    sudo apt-get update
-    sudo apt-get install nodejs
-    sudo apt-get install npm
+    cd docs/backend
     ```
 
-2.  **Clone the repository:**
-
-    ```bash
-    git clone https://github.com/darkosBE/WAC-PROJECT
-    ```
-
-3.  **Install dependencies:**
-
+2.  **Install dependencies:**
     ```bash
     npm install
     ```
 
-4.  **Build the project:**
-
-    ```bash
-    npm run build
-    ```
-
-5.  **Start the server:**
-
-    ```bash
-    npm start
-    ```
-
-6.  **Open the client:** Open your web browser and navigate to `http://localhost:8080`
-
-### VPS
-
-1.  **Connect to your VPS:** Connect to your VPS using SSH.
-2.  **Install Node.js:**
-
-    ```bash
-    sudo apt-get update
-    sudo apt-get install nodejs
-    sudo apt-get install npm
-    ```
-
-3.  **Clone the repository:**
-
-    ```bash
-    git clone https://github.com/darkosBE/WAC-PROJECT
-    ```
-
-4.  **Install dependencies:**
-
-    ```bash
-    npm install
-    ```
-
-5.  **Build the project:**
-
-    ```bash
-    npm run build
-    ```
-
-6.  **Start the server with a process manager:**
-
+3.  **Install PM2 globally:**
     ```bash
     npm install -g pm2
-    pm2 start npm --name "web-afk-client" -- start
     ```
 
-7.  **Access the client:** You should be able to access the client through your VPS's IP address and the port `8080`
+4.  **Start the server with PM2:**
+    ```bash
+    pm2 start npm --name "afk-backend" -- start
+    ```
+
+---
+
+### 3. Frontend Installation
+
+The frontend service runs on port **8080**.
+
+**Important:** Make sure you are in the root directory of the project (`WAC-PROJECT`) before starting.
+
+#### Windows & Linux
+
+1.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+2.  **Build the project:**
+    ```bash
+    npm run build
+    ```
+
+3.  **Start the frontend server:**
+    ```bash
+    # This will serve the built React application
+    npm start
+    ```
+
+#### VPS (with PM2)
+
+1.  **Install dependencies & Build:**
+    ```bash
+    npm install
+    npm run build
+    ```
+
+2.  **Install PM2 globally (if not already installed):**
+    ```bash
+    npm install -g pm2
+    ```
+
+3.  **Start the server with PM2:**
+    ```bash
+    pm2 start npm --name "afk-frontend" -- start
+    ```
+
+---
+
+### 4. Accessing the Application
+
+Once both the backend and frontend are running, you can access the web client by navigating to:
+
+-   **Locally:** `http://localhost:8080`
+-   **On a VPS:** `http://<your-vps-ip>:8080`
+
+Make sure that port `8080` (for the frontend) and `1043` (for the backend) are open on your server's firewall.
 
 ## Contributing
 
@@ -127,4 +151,4 @@ Contributions are welcome! If you have any ideas, suggestions, or bug reports, p
 
 ## License
 
-This project is licensed under the BSD-3-Clause license License. See the [LICENSE](LICENSE) file for more details.
+This project is licensed under the MIT License.
