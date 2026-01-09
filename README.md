@@ -60,7 +60,7 @@ This project is a web-based client for managing AFK bots on a Minecraft server. 
 2.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/darkosbe/WAC-PROJECT
+    git clone https://github.com/darkosBE/WAC-PROJECT
     ```
 
 3.  **Install dependencies:**
@@ -97,7 +97,7 @@ This project is a web-based client for managing AFK bots on a Minecraft server. 
 3.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/darkosbe/WAC-PROJECT
+    git clone https://github.com/darkosBE/WAC-PROJECT
     ```
 
 4.  **Install dependencies:**
