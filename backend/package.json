@@ -1,0 +1,15 @@
+{
+  "name": "afk-console-backend",
+  "version": "1.0.0",
+  "description": "AFK Console Client Backend Server",
+  "main": "start.js",
+  "scripts": {
+    "start": "node start.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "mineflayer": "^4.14.0",
+    "proxy-agent": "^5.0.0"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "offlineMode": false,
+  "sneak": false,
+  "botPhysics": true,
+  "antiAFK": true,
+  "antiAFKInterval": 1,
+  "antiAFKPhysical": {
+    "forward": true,
+    "head": true,
+    "arm": false,
+    "jump": true
+  },
+  "antiAFKChat": {
+    "message": "/ping",
+    "send": false
+  },
+  "joinMessages": false,
+  "joinMessageDelay": 2,
+  "worldChangeMessages": false,
+  "worldChangeMessageDelay": 5,
+  "autoReconnect": true,
+  "autoReconnectDelay": 4,
+  "proxies": false,
+  "fakeHost": false,
+  "joinMessagesList": [
+    "Hello world"
+  ],
+  "worldChangeMessagesList": []
+}
