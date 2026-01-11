@@ -156,7 +156,7 @@ async function initializeData() {
 // CORS Middleware
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Methods', 'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
@@ -425,7 +425,7 @@ io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
   
   socket.on('connect-bot', async (data) => {
-    const { botName } = data;
+    const { botName, version } = data;
     
     try {
       if (activeBots.has(botName)) {
@@ -459,9 +459,10 @@ io.on('connection', (socket) => {
         host: info.serverIP,
         port: info.serverPort || 25565,
         username: botData.username,
-        version: info.version || '1.20.1',
-        auth: botData.auth || 'microsoft', // Use bot-specific auth, default to microsoft
-        physicsEnabled: settings.botPhysics !== false
+        version: version || info.version || '1.20.1',
+        auth: botData.auth || 'microsoft',
+        physicsEnabled: settings.botPhysics !== false,
+        disableChatSigning: true
       };
 
       if (settings.proxies) {
@@ -564,7 +565,7 @@ io.on('connection', (socket) => {
             const reconnectEvent = { botName };
             socket.emit('reconnecting-bot', reconnectEvent);
             logEvent({ type: 'reconnecting-bot', ...reconnectEvent });
-            socket.emit('connect-bot', { botName });
+            socket.emit('connect-bot', { botName, version: botOptions.version });
           }, (settings.autoReconnectDelay || 4) * 1000);
           botTimers.set(botName, { reconnect: timer });
         }
