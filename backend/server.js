@@ -97,7 +97,7 @@ async function migrateBotsIfNecessary(bots, save = false) {
   let needsSave = false;
   bots.forEach(bot => {
     if (!bot.auth) {
-      bot.auth = 'microsoft'; // Default to microsoft for existing bots
+      bot.auth = 'microsoft';
       needsSave = true;
     }
   });
@@ -156,7 +156,7 @@ async function initializeData() {
 // CORS Middleware
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
@@ -420,6 +420,28 @@ function setupAntiAFK(bot, botName, settings) {
   botTimers.set(botName, timers);
 }
 
+// Chat packet interceptor to prevent crashes
+function setupChatPacketFilter(bot, botName) {
+  const client = bot._client;
+  
+  // Override the internal packet handler to catch errors silently
+  const originalPacketHandler = client.emit.bind(client);
+  client.emit = function(event, ...args) {
+    if (event === 'systemChat' || event === 'playerChat' || event === 'chat') {
+      try {
+        return originalPacketHandler(event, ...args);
+      } catch (err) {
+        if (err.message && err.message.includes('unknown chat format code')) {
+          // Silently suppress chat parsing errors
+          return;
+        }
+        throw err;
+      }
+    }
+    return originalPacketHandler(event, ...args);
+  };
+}
+
 // Socket.IO handlers
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
@@ -450,7 +472,7 @@ io.on('connection', (socket) => {
       }
       
       const status = { botName, status: 'connecting', message: 'Connecting...' };
-      io.emit('bot-status', status); // Use io.emit to broadcast to all clients
+      io.emit('bot-status', status);
       logEvent({ type: 'bot-status', ...status });
       
       await new Promise(resolve => setTimeout(resolve, info.loginDelay * 1000));
@@ -461,8 +483,7 @@ io.on('connection', (socket) => {
         username: botData.username,
         version: version || info.version || '1.20.1',
         auth: botData.auth || 'microsoft',
-        physicsEnabled: settings.botPhysics !== false,
-        disableChatSigning: true
+        physicsEnabled: settings.botPhysics !== false
       };
 
       if (settings.proxies) {
@@ -482,8 +503,14 @@ io.on('connection', (socket) => {
       const bot = mineflayer.createBot(botOptions);
       activeBots.set(botName, bot);
       botTimers.set(botName, {});
-      
+
+      // Setup chat packet filter IMMEDIATELY after bot creation
+      setupChatPacketFilter(bot, botName);
+
+      let isReady = false;
+
       bot.on('login', () => {
+        isReady = true;
         const status = { botName, status: 'connected', message: 'Connected' };
         io.emit('bot-status', status);
         logEvent({ type: 'bot-status', ...status });
@@ -524,19 +551,37 @@ io.on('connection', (socket) => {
       });
       
       bot.on('message', (jsonMsg) => {
-        const chat = { botName, username: 'Server', message: jsonMsg.toString() };
-        io.emit('bot-chat', chat);
-        logEvent({ type: 'bot-chat', ...chat });
+        if (!isReady) return;
+        try {
+          const chat = { botName, username: 'Server', message: jsonMsg.toString() };
+          io.emit('bot-chat', chat);
+          logEvent({ type: 'bot-chat', ...chat });
+        } catch (err) {
+          console.warn(`[${botName}] Message error:`, err.message);
+        }
       });
       
       bot.on('chat', (username, message) => {
-        const chat = { botName, username, message };
-        io.emit('bot-chat', chat);
-        logEvent({ type: 'bot-chat', ...chat });
+        if (!isReady) return;
+        try {
+          const chat = { botName, username, message };
+          io.emit('bot-chat', chat);
+          logEvent({ type: 'bot-chat', ...chat });
+        } catch (err) {
+          console.warn(`[${botName}] Chat error:`, err.message);
+        }
       });
       
       bot.on('error', (err) => {
         const message = err.message || '';
+        
+        // Silently suppress chat format and packet read errors
+        if (message.includes('unknown chat format code') || 
+            message.includes('PartialReadError') ||
+            message.includes('Unexpected buffer end')) {
+          return;
+        }
+        
         if (message.includes('https://www.microsoft.com/link')) {
           const codeMatch = message.match(/use the code ([A-Z0-9]+)/);
           const authEvent = { 
@@ -565,7 +610,6 @@ io.on('connection', (socket) => {
             const reconnectEvent = { botName };
             io.emit('reconnecting-bot', reconnectEvent);
             logEvent({ type: 'reconnecting-bot', ...reconnectEvent });
-            // Correctly pass the version on reconnect
             io.emit('connect-bot', { botName, version: botOptions.version });
           }, (settings.autoReconnectDelay || 4) * 1000);
           const timers = botTimers.get(botName) || {};
@@ -682,6 +726,27 @@ process.on('SIGINT', () => {
     try { bot.quit(); cleanupBot(botName); } catch (err) {}
   }
   process.exit(0);
+});
+
+// Global error handlers to prevent crashes
+process.on('uncaughtException', (err) => {
+  const msg = err.message || '';
+  if (msg.includes('unknown chat format code') || 
+      msg.includes('PartialReadError') ||
+      msg.includes('Unexpected buffer end')) {
+    // Silently suppress packet parsing errors
+    return;
+  }
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  const msg = reason?.message || reason?.toString() || '';
+  if (msg.includes('PartialReadError') || msg.includes('Unexpected buffer end')) {
+    // Silently suppress packet parsing errors
+    return;
+  }
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 async function startServer() {
