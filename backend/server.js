@@ -450,7 +450,7 @@ io.on('connection', (socket) => {
       }
       
       const status = { botName, status: 'connecting', message: 'Connecting...' };
-      socket.emit('bot-status', status);
+      io.emit('bot-status', status); // Use io.emit to broadcast to all clients
       logEvent({ type: 'bot-status', ...status });
       
       await new Promise(resolve => setTimeout(resolve, info.loginDelay * 1000));
@@ -485,7 +485,7 @@ io.on('connection', (socket) => {
       
       bot.on('login', () => {
         const status = { botName, status: 'connected', message: 'Connected' };
-        socket.emit('bot-status', status);
+        io.emit('bot-status', status);
         logEvent({ type: 'bot-status', ...status });
         
         if (settings.joinMessages && Array.isArray(settings.joinMessagesList)) {
@@ -506,7 +506,7 @@ io.on('connection', (socket) => {
       
       bot.on('spawn', () => {
         const status = { botName, status: 'spawned', message: 'Spawned' };
-        socket.emit('bot-status', status);
+        io.emit('bot-status', status);
         logEvent({ type: 'bot-status', ...status });
         
         if (settings.worldChangeMessages && Array.isArray(settings.worldChangeMessagesList)) {
@@ -525,13 +525,13 @@ io.on('connection', (socket) => {
       
       bot.on('message', (jsonMsg) => {
         const chat = { botName, username: 'Server', message: jsonMsg.toString() };
-        socket.emit('bot-chat', chat);
+        io.emit('bot-chat', chat);
         logEvent({ type: 'bot-chat', ...chat });
       });
       
       bot.on('chat', (username, message) => {
         const chat = { botName, username, message };
-        socket.emit('bot-chat', chat);
+        io.emit('bot-chat', chat);
         logEvent({ type: 'bot-chat', ...chat });
       });
       
@@ -544,18 +544,18 @@ io.on('connection', (socket) => {
             code: codeMatch ? codeMatch[1] : 'N/A',
             message: message 
           };
-          socket.emit('microsoft-auth', authEvent);
+          io.emit('microsoft-auth', authEvent);
           logEvent({ type: 'microsoft-auth', ...authEvent });
         } else {
           const error = { botName, error: message };
-          socket.emit('bot-error', error);
+          io.emit('bot-error', error);
           logEvent({ type: 'bot-error', ...error });
         }
       });
       
       bot.on('end', (reason) => {
-        const status = { botName, status: 'disconnected', message: `Disconnected: ${reason || 'Unknown'}` };
-        socket.emit('bot-status', status);
+        const status = { botName, status: 'disconnected', message: `${reason || 'Unknown'}` };
+        io.emit('bot-status', status);
         logEvent({ type: 'bot-status', ...status });
         cleanupBot(botName);
         activeBots.delete(botName);
@@ -563,28 +563,32 @@ io.on('connection', (socket) => {
         if (settings.autoReconnect) {
           const timer = setTimeout(() => {
             const reconnectEvent = { botName };
-            socket.emit('reconnecting-bot', reconnectEvent);
+            io.emit('reconnecting-bot', reconnectEvent);
             logEvent({ type: 'reconnecting-bot', ...reconnectEvent });
-            socket.emit('connect-bot', { botName, version: botOptions.version });
+            // Correctly pass the version on reconnect
+            io.emit('connect-bot', { botName, version: botOptions.version });
           }, (settings.autoReconnectDelay || 4) * 1000);
-          botTimers.set(botName, { reconnect: timer });
+          const timers = botTimers.get(botName) || {};
+          timers.reconnect = timer;
+          botTimers.set(botName, timers);
         }
       });
       
       bot.on('kicked', (reason) => {
-        const status = { botName, status: 'kicked', message: `Kicked: ${reason}` };
-        socket.emit('bot-status', status);
+        const status = { botName, status: 'kicked', message: `${reason}` };
+        io.emit('bot-status', status);
         logEvent({ type: 'bot-status', ...status });
       });
+
       bot.on('death', () => {
         const status = { botName, status: 'death', message: 'Died and respawned' };
-        socket.emit('bot-status', status);
+        io.emit('bot-status', status);
         logEvent({ type: 'bot-status', ...status });
       });
       
     } catch (err) {
       const error = { botName, error: err.message };
-      socket.emit('bot-error', error);
+      io.emit('bot-error', error);
       logEvent({ type: 'bot-error', ...error });
       cleanupBot(botName);
       activeBots.delete(botName);
@@ -595,11 +599,14 @@ io.on('connection', (socket) => {
     const { botName } = data;
     const bot = activeBots.get(botName);
     if (bot) {
+      const timers = botTimers.get(botName) || {};
+      if(timers.reconnect) clearTimeout(timers.reconnect);
+
       try { bot.quit(); } catch (err) {}
       cleanupBot(botName);
       activeBots.delete(botName);
-      const status = { botName, status: 'disconnected', message: 'Disconnected' };
-      socket.emit('bot-status', status);
+      const status = { botName, status: 'disconnected', message: 'Manual disconnect' };
+      io.emit('bot-status', status);
       logEvent({ type: 'bot-status', ...status });
     }
   });
@@ -643,17 +650,15 @@ io.on('connection', (socket) => {
       switch (action) {
         case 'move':
           ['forward', 'back', 'left', 'right', 'jump', 'sprint', 'sneak'].forEach(control => {
-            bot.setControlState(control, control === option);
+            bot.setControlState(control, false);
           });
-          if (option === 'stop') {
-            ['forward', 'back', 'left', 'right', 'jump', 'sprint', 'sneak'].forEach(control => {
-              bot.setControlState(control, false);
-            });
+          if (option !== 'stop') {
+             bot.setControlState(option, true);
           }
           break;
         case 'jump':
           bot.setControlState('jump', true);
-          setTimeout(() => bot.setControlState('jump', false), 500);
+          setTimeout(() => bot.setControlState('jump', false), 100);
           break;
         case 'look':
           const { yaw, pitch } = option || {};
