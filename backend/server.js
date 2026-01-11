@@ -420,25 +420,108 @@ function setupAntiAFK(bot, botName, settings) {
   botTimers.set(botName, timers);
 }
 
-// Chat packet interceptor to prevent crashes
+// Chat packet interceptor - translate malformed packets or drop them
 function setupChatPacketFilter(bot, botName) {
   const client = bot._client;
   
-  // Override the internal packet handler to catch errors silently
-  const originalPacketHandler = client.emit.bind(client);
+  // Helper to extract text from any packet format
+  function translatePacket(packet) {
+    try {
+      // Handle string packets
+      if (typeof packet === 'string') return packet;
+      
+      // Handle null/undefined
+      if (!packet) return null;
+      
+      // Try common packet fields
+      if (packet.message) return packet.message;
+      if (packet.plainMessage) return packet.plainMessage;
+      if (packet.unsignedContent) return packet.unsignedContent;
+      
+      // Try content object
+      if (packet.content) {
+        if (typeof packet.content === 'string') return packet.content;
+        if (packet.content.text) return packet.content.text;
+        if (packet.content.translate) return packet.content.translate;
+        
+        // Recursively check content
+        const contentText = translatePacket(packet.content);
+        if (contentText) return contentText;
+      }
+      
+      // Try to extract from JSON structure
+      if (typeof packet === 'object') {
+        // Look for any "text" field
+        if (packet.text) return packet.text;
+        
+        // Check for translate strings
+        if (packet.translate) return packet.translate;
+        
+        // Search through all properties
+        for (const key in packet) {
+          if (typeof packet[key] === 'string' && packet[key].length > 0) {
+            return packet[key];
+          }
+          if (typeof packet[key] === 'object') {
+            const nested = translatePacket(packet[key]);
+            if (nested) return nested;
+          }
+        }
+        
+        // Last resort: stringify and regex
+        try {
+          const json = JSON.stringify(packet);
+          const textMatch = json.match(/"text"\s*:\s*"([^"]+)"/);
+          if (textMatch) return textMatch[1];
+        } catch (e) {}
+      }
+      
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  // Intercept at the packet level BEFORE mineflayer processes it
+  const originalEmit = client.emit.bind(client);
   client.emit = function(event, ...args) {
+    // Only intercept chat-related events
     if (event === 'systemChat' || event === 'playerChat' || event === 'chat') {
       try {
-        return originalPacketHandler(event, ...args);
+        // Try to translate the packet first
+        const packet = args[0];
+        const translatedText = translatePacket(packet);
+        
+        if (translatedText) {
+          // Successfully translated - emit to frontend
+          const chat = { 
+            botName, 
+            username: event === 'playerChat' ? (packet.senderName || 'Player') : 'Server', 
+            message: translatedText 
+          };
+          io.emit('bot-chat', chat);
+          logEvent({ type: 'bot-chat', ...chat });
+        }
+        
+        // Try to call the original handler anyway (might work)
+        try {
+          return originalEmit(event, ...args);
+        } catch (innerErr) {
+          // Original handler failed, but we already sent translated text so it's fine
+          return;
+        }
       } catch (err) {
-        if (err.message && err.message.includes('unknown chat format code')) {
-          // Silently suppress chat parsing errors
+        // If everything fails, just suppress the error
+        if (err.message && (err.message.includes('unknown chat format') || 
+                           err.message.includes('PartialReadError'))) {
           return;
         }
         throw err;
       }
     }
-    return originalPacketHandler(event, ...args);
+    
+    // For non-chat events, just pass through
+    return originalEmit(event, ...args);
   };
 }
 
@@ -504,13 +587,14 @@ io.on('connection', (socket) => {
       activeBots.set(botName, bot);
       botTimers.set(botName, {});
 
-      // Setup chat packet filter IMMEDIATELY after bot creation
-      setupChatPacketFilter(bot, botName);
-
       let isReady = false;
 
       bot.on('login', () => {
         isReady = true;
+        
+        // Setup chat interceptor AFTER login
+        setupChatPacketFilter(bot, botName);
+        
         const status = { botName, status: 'connected', message: 'Connected' };
         io.emit('bot-status', status);
         logEvent({ type: 'bot-status', ...status });
@@ -557,7 +641,7 @@ io.on('connection', (socket) => {
           io.emit('bot-chat', chat);
           logEvent({ type: 'bot-chat', ...chat });
         } catch (err) {
-          console.warn(`[${botName}] Message error:`, err.message);
+          // Handled by interceptor
         }
       });
       
@@ -568,7 +652,7 @@ io.on('connection', (socket) => {
           io.emit('bot-chat', chat);
           logEvent({ type: 'bot-chat', ...chat });
         } catch (err) {
-          console.warn(`[${botName}] Chat error:`, err.message);
+          // Handled by interceptor
         }
       });
       
@@ -653,6 +737,39 @@ io.on('connection', (socket) => {
       io.emit('bot-status', status);
       logEvent({ type: 'bot-status', ...status });
     }
+  });
+  
+  socket.on('connect-all-bots', async (data) => {
+    try {
+      const bots = await loadOrCreateFile(BOTS_FILE, []);
+      const { version } = data || {};
+      
+      for (const botData of bots) {
+        if (!activeBots.has(botData.username)) {
+          // Delay between each bot to avoid overwhelming the server
+          setTimeout(() => {
+            socket.emit('connect-bot', { botName: botData.username, version });
+          }, bots.indexOf(botData) * 1000);
+        }
+      }
+    } catch (err) {
+      socket.emit('bot-error', { error: err.message });
+    }
+  });
+  
+  socket.on('disconnect-all-bots', () => {
+    for (const [botName, bot] of activeBots.entries()) {
+      const timers = botTimers.get(botName) || {};
+      if(timers.reconnect) clearTimeout(timers.reconnect);
+      
+      try { bot.quit(); } catch (err) {}
+      cleanupBot(botName);
+      
+      const status = { botName, status: 'disconnected', message: 'Manual disconnect (all)' };
+      io.emit('bot-status', status);
+      logEvent({ type: 'bot-status', ...status });
+    }
+    activeBots.clear();
   });
   
   socket.on('send-chat', (data) => {
