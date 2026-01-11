@@ -17,6 +17,7 @@ export default function SettingsPage() {
   const [backendVersion, setBackendVersion] = useState<string | null>(null);
   const [loadingVersion, setLoadingVersion] = useState(false);
 
+  // Auto-fetch backend version when the page loads or API URL changes
   useEffect(() => {
     const fetchVersion = async () => {
       setLoadingVersion(true);
@@ -32,18 +33,32 @@ export default function SettingsPage() {
     fetchVersion();
   }, [apiUrl]);
 
-  const handleSaveUrl = () => {
-    setApiUrl(apiUrl);
-    toast.success('API URL saved. Reloading page to reconnect...');
-    setTestResult(null);
-    setTimeout(() => window.location.reload(), 1500);
-  };
+  // --- Auto-Save and Reconnect Logic ---
+  useEffect(() => {
+    // Set up a timer to save and reconnect 1 second after the user stops typing.
+    const handler = setTimeout(() => {
+      const currentStoredUrl = getApiUrl();
+      if (apiUrl !== currentStoredUrl) {
+        console.log('Auto-saving and reconnecting...');
+        setApiUrl(apiUrl); // Save the new URL to localStorage
+        reconnect(); // Trigger the WebSocket reconnection
+        toast.info('Settings auto-saved. Reconnecting...');
+        setTestResult(null); // Reset test result on new URL
+      }
+    }, 1000); // 1-second debounce delay
+
+    // Cleanup function: If the user types again, clear the previous timer.
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [apiUrl, reconnect]);
 
   const handleTestConnection = async () => {
     setTesting(true);
     setTestResult(null);
     
     const originalUrl = getApiUrl();
+    // Temporarily set the API URL for the test without saving it yet
     setApiUrl(apiUrl);
     
     try {
@@ -53,12 +68,12 @@ export default function SettingsPage() {
         toast.success('Connection successful!');
       } else {
         toast.error('Connection failed');
-        setApiUrl(originalUrl);
+        setApiUrl(originalUrl); // Revert to the original URL on failure
       }
     } catch {
       setTestResult(false);
       toast.error('Connection failed');
-      setApiUrl(originalUrl);
+      setApiUrl(originalUrl); // Revert on exception
     } finally {
       setTesting(false);
     }
@@ -159,9 +174,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          <Button onClick={handleSaveUrl} className="w-full bg-primary hover:bg-primary/90">
-            Save & Reconnect
-          </Button>
+          {/* The "Save & Reconnect" button has been removed as this functionality is now automatic. */}
         </CardContent>
       </Card>
 

@@ -1,11 +1,15 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useSocket, BotStatusEvent, BotChatEvent } from '@/hooks/useSocket.tsx';
+import { createContext, useContext, ReactNode } from 'react';
+import { useSocket, BotStatusEvent, BotChatEvent } from '../hooks/useSocket';
+import { LogEntry } from '../lib/api';
 
+// Define the shape of the context
+// This is what the rest of the application will interact with.
 interface SocketContextType {
   isConnected: boolean;
   botStatuses: Record<string, BotStatusEvent>;
   chatMessages: BotChatEvent[];
-  connectBot: (botName: string) => void;
+  lastLog: LogEntry | null;
+  connectBot: (botName: string, version: string) => void; 
   disconnectBot: (botName: string) => void;
   sendChat: (botName: string, message: string) => void;
   sendSpam: (botName: string, message: string, delay: number, enable: boolean) => void;
@@ -14,10 +18,17 @@ interface SocketContextType {
   reconnect: () => void;
 }
 
-const SocketContext = createContext<SocketContextType | null>(null);
+// Create the context with a default (empty) value.
+export const SocketContext = createContext<SocketContextType>(null!);
 
-export function SocketProvider({ children }: { children: ReactNode }) {
-  const socket = useSocket();
+// --- SocketProvider Component ---
+// This is the component that will wrap the application and provide the context.
+interface SocketProviderProps {
+  children: ReactNode;
+}
+
+export function SocketProvider({ children }: SocketProviderProps) {
+  const socket = useSocket(); // This hook contains all the connection logic
 
   return (
     <SocketContext.Provider value={socket}>
@@ -26,10 +37,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Custom hook for easy access to the socket context
 export function useSocketContext() {
-  const context = useContext(SocketContext);
-  if (!context) {
-    throw new Error('useSocketContext must be used within a SocketProvider');
-  }
-  return context;
+  return useContext(SocketContext);
 }

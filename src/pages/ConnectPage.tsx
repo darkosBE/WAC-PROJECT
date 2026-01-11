@@ -16,7 +16,7 @@ import {
   getBots, saveBots, BotAccount
 } from '@/lib/api';
 import { toast } from 'sonner';
-import { Plus, XCircle, Power, Loader2, Server, Settings, Users } from 'lucide-react';
+import { Plus, XCircle, Power, Loader2, Server, Settings, Users, Save } from 'lucide-react';
 
 export default function ConnectPage() {
   const { botStatuses, connectBot, disconnectBot } = useSocketContext();
@@ -69,11 +69,20 @@ export default function ConnectPage() {
 
   const handleSaveSettings = async () => {
     try {
-      await saveServerInfo(serverInfo);
       await saveSettings(settings);
-      toast.success('Information and settings saved');
+      toast.success('Settings saved');
     } catch (e) {
       toast.error('Failed to save settings');
+    }
+  }
+
+  // New function to save only the server IP details
+  const handleSaveIp = async () => {
+    try {
+      await saveServerInfo(serverInfo);
+      toast.success('Server information saved successfully!');
+    } catch (e) {
+      toast.error('Failed to save server information.');
     }
   }
 
@@ -84,7 +93,7 @@ export default function ConnectPage() {
   const handleConnectAll = () => {
     bots.forEach(bot => {
         if (botStatuses[bot.username]?.status !== 'connected') {
-            connectBot(bot.username);
+            connectBot(bot.username, serverInfo.version);
         }
     });
   };
@@ -131,18 +140,7 @@ export default function ConnectPage() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div className="bg-card p-6 rounded-lg shadow-lg flex items-center justify-between animate-fade-in-up">
-          <div className="flex items-center">
-              <div className="bg-primary/20 p-3 rounded-lg mr-4">
-                  <h2 className="text-primary text-4xl font-bold">ACC</h2>
-              </div>
-              <div>
-                  <h1 className="text-foreground text-2xl font-bold">AFK 24/7 with your computer off</h1>
-                  <p className="text-muted-foreground">Get premium for reliable, always-on bot hosting.</p>
-              </div>
-          </div>
-          <Button className="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform hover:scale-105">
-              BUY NOW - $3.99
-          </Button>
+          {/* Premium banner */}
       </div>
         
       <h1 className="text-2xl font-bold text-foreground">Connect</h1>
@@ -164,6 +162,11 @@ export default function ConnectPage() {
           </div>
           <Button className="w-full bg-green-600 hover:bg-green-700" onClick={handleConnectAll}>Connect All</Button>
           <Button className="w-full bg-red-600 hover:bg-red-700" onClick={handleDisconnectAll}>Disconnect All</Button>
+          {/* The new "Save IP" button */}
+          <Button className="w-full" onClick={handleSaveIp}>
+            <Save className="w-4 h-4 mr-2" />
+            Save IP
+          </Button>
         </Card>
 
         <Card className="p-6 space-y-2 animate-fade-in-up animation-delay-400">
@@ -205,7 +208,7 @@ export default function ConnectPage() {
                                     if (isOnline) {
                                       disconnectBot(bot.username);
                                     } else {
-                                      connectBot(bot.username);
+                                      connectBot(bot.username, serverInfo.version);
                                     }
                                   }}
                                   disabled={isConnecting}
