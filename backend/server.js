@@ -17,7 +17,7 @@ const io = socketIO(server, {
   }
 });
 
-const PORT = 1043;
+const PORT = 25582;
 
 // Store active bots and their timers
 const activeBots = new Map();
@@ -378,6 +378,7 @@ function cleanupBot(botName) {
     if (timers.antiAFK) clearInterval(timers.antiAFK);
     if (timers.spam) clearInterval(timers.spam);
     if (timers.reconnect) clearTimeout(timers.reconnect);
+    if (timers.connectionTimeout) clearTimeout(timers.connectionTimeout);
     botTimers.delete(botName);
   }
 }
@@ -566,7 +567,11 @@ io.on('connection', (socket) => {
         username: botData.username,
         version: version || info.version || '1.20.1',
         auth: botData.auth || 'microsoft',
-        physicsEnabled: settings.botPhysics !== false
+        physicsEnabled: settings.botPhysics !== false,
+        // CRITICAL FIX: Increase keepalive timeout and add connection options
+        checkTimeoutInterval: 60000, // Check every 60 seconds instead of 30
+        keepAlive: true,
+        connectTimeout: 60000 // Allow 60 seconds for initial connection
       };
 
       if (settings.proxies) {
@@ -587,10 +592,30 @@ io.on('connection', (socket) => {
       activeBots.set(botName, bot);
       botTimers.set(botName, {});
 
+      // CRITICAL FIX: Add connection timeout handler
+      const timers = botTimers.get(botName);
+      timers.connectionTimeout = setTimeout(() => {
+        if (activeBots.has(botName) && !bot.entity) {
+          // Bot didn't spawn within reasonable time
+          const error = { botName, error: 'Connection timeout - server may be unresponsive' };
+          io.emit('bot-error', error);
+          logEvent({ type: 'bot-error', ...error });
+          try { bot.quit(); } catch (e) {}
+          cleanupBot(botName);
+          activeBots.delete(botName);
+        }
+      }, 45000); // 45 second overall connection timeout
+
       let isReady = false;
 
       bot.on('login', () => {
         isReady = true;
+        
+        // Clear connection timeout since we successfully logged in
+        if (timers.connectionTimeout) {
+          clearTimeout(timers.connectionTimeout);
+          timers.connectionTimeout = null;
+        }
         
         // Setup chat interceptor AFTER login
         setupChatPacketFilter(bot, botName);
@@ -616,6 +641,12 @@ io.on('connection', (socket) => {
       });
       
       bot.on('spawn', () => {
+        // Clear connection timeout since we successfully spawned
+        if (timers.connectionTimeout) {
+          clearTimeout(timers.connectionTimeout);
+          timers.connectionTimeout = null;
+        }
+        
         const status = { botName, status: 'spawned', message: 'Spawned' };
         io.emit('bot-status', status);
         logEvent({ type: 'bot-status', ...status });
@@ -663,6 +694,16 @@ io.on('connection', (socket) => {
         if (message.includes('unknown chat format code') || 
             message.includes('PartialReadError') ||
             message.includes('Unexpected buffer end')) {
+          return;
+        }
+        
+        // Handle timeout specifically
+        if (message.includes('timed out')) {
+          const error = { botName, error: 'Connection timeout - check server status and version' };
+          io.emit('bot-error', error);
+          logEvent({ type: 'bot-error', ...error });
+          cleanupBot(botName);
+          activeBots.delete(botName);
           return;
         }
         
@@ -729,6 +770,7 @@ io.on('connection', (socket) => {
     if (bot) {
       const timers = botTimers.get(botName) || {};
       if(timers.reconnect) clearTimeout(timers.reconnect);
+      if(timers.connectionTimeout) clearTimeout(timers.connectionTimeout);
 
       try { bot.quit(); } catch (err) {}
       cleanupBot(botName);
