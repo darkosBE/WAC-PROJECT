@@ -398,7 +398,6 @@ function setupAntiAFK(bot, botName, settings) {
     }
 
     try {
-      // FIX: Perform actions sequentially with proper timing
       if (config.physical.forward) {
         bot.setControlState('forward', true);
         setTimeout(() => {
@@ -416,9 +415,9 @@ function setupAntiAFK(bot, botName, settings) {
               if (bot && !bot._client.ended) {
                 bot.setControlState('jump', false);
               }
-            }, 100); // Jump is quick
+            }, 100);
           }
-        }, 600); // After forward movement
+        }, 600);
       }
       
       if (config.physical.head) {
@@ -452,111 +451,6 @@ function setupAntiAFK(bot, botName, settings) {
   const timers = botTimers.get(botName) || {};
   timers.antiAFK = timer;
   botTimers.set(botName, timers);
-}
-
-// Chat packet interceptor - translate malformed packets or drop them
-function setupChatPacketFilter(bot, botName) {
-  const client = bot._client;
-  
-  // Helper to extract text from any packet format
-  function translatePacket(packet) {
-    try {
-      // Handle string packets
-      if (typeof packet === 'string') return packet;
-      
-      // Handle null/undefined
-      if (!packet) return null;
-      
-      // Try common packet fields
-      if (packet.message) return packet.message;
-      if (packet.plainMessage) return packet.plainMessage;
-      if (packet.unsignedContent) return packet.unsignedContent;
-      
-      // Try content object
-      if (packet.content) {
-        if (typeof packet.content === 'string') return packet.content;
-        if (packet.content.text) return packet.content.text;
-        if (packet.content.translate) return packet.content.translate;
-        
-        // Recursively check content
-        const contentText = translatePacket(packet.content);
-        if (contentText) return contentText;
-      }
-      
-      // Try to extract from JSON structure
-      if (typeof packet === 'object') {
-        // Look for any "text" field
-        if (packet.text) return packet.text;
-        
-        // Check for translate strings
-        if (packet.translate) return packet.translate;
-        
-        // Search through all properties
-        for (const key in packet) {
-          if (typeof packet[key] === 'string' && packet[key].length > 0) {
-            return packet[key];
-          }
-          if (typeof packet[key] === 'object') {
-            const nested = translatePacket(packet[key]);
-            if (nested) return nested;
-          }
-        }
-        
-        // Last resort: stringify and regex
-        try {
-          const json = JSON.stringify(packet);
-          const textMatch = json.match(/"text"\s*:\s*"([^"]+)"/);
-          if (textMatch) return textMatch[1];
-        } catch (e) {}
-      }
-      
-      return null;
-    } catch (e) {
-      return null;
-    }
-  }
-  
-  // Intercept at the packet level BEFORE mineflayer processes it
-  const originalEmit = client.emit.bind(client);
-  client.emit = function(event, ...args) {
-    // Only intercept chat-related events
-    if (event === 'systemChat' || event === 'playerChat' || event === 'chat') {
-      try {
-        // Try to translate the packet first
-        const packet = args[0];
-        const translatedText = translatePacket(packet);
-        
-        if (translatedText) {
-          // Successfully translated - emit to frontend
-          const chat = { 
-            botName, 
-            username: event === 'playerChat' ? (packet.senderName || 'Player') : 'Server', 
-            message: translatedText 
-          };
-          io.emit('bot-chat', chat);
-          logEvent({ type: 'bot-chat', ...chat });
-        }
-        
-        // Try to call the original handler anyway (might work)
-        try {
-          return originalEmit(event, ...args);
-        } catch (innerErr) {
-          // Original handler failed, but we already sent translated text so it's fine
-          return;
-        }
-      } catch (err) {
-        // If everything fails, just suppress the error
-        if (err.message && (err.message.includes('unknown chat format') || 
-                           err.message.includes('PartialReadError'))) {
-          return;
-        }
-        throw err;
-      }
-    }
-    
-    // For non-chat events, just pass through
-    return originalEmit(event, ...args);
-  };
 }
 
 // Socket.IO handlers
@@ -601,10 +495,9 @@ io.on('connection', (socket) => {
         version: version || info.version || '1.20.1',
         auth: botData.auth || 'microsoft',
         physicsEnabled: settings.botPhysics !== false,
-        // CRITICAL FIX: Increase keepalive timeout and add connection options
-        checkTimeoutInterval: 60000, // Check every 60 seconds instead of 30
+        checkTimeoutInterval: 60000,
         keepAlive: true,
-        connectTimeout: 60000 // Allow 60 seconds for initial connection
+        connectTimeout: 60000
       };
 
       if (settings.proxies) {
@@ -625,29 +518,22 @@ io.on('connection', (socket) => {
       activeBots.set(botName, bot);
       botTimers.set(botName, {});
 
-      // CRITICAL FIX: Suppress packet parsing errors at the client level
       if (bot._client) {
         const client = bot._client;
-        
-        // Intercept packet errors before they crash
         client.on('error', (err) => {
           const msg = err.message || '';
           if (msg.includes('partial packet') || 
               msg.includes('PartialReadError') ||
               msg.includes('Chunk size is')) {
-            // Silently ignore packet parsing errors
             return;
           }
-          // Let other errors pass through normally
           client.emit('realError', err);
         });
       }
 
-      // CRITICAL FIX: Add connection timeout handler
       const timers = botTimers.get(botName);
       timers.connectionTimeout = setTimeout(() => {
         if (activeBots.has(botName) && !bot.entity) {
-          // Bot didn't spawn within reasonable time
           const error = { botName, error: 'Connection timeout - server may be unresponsive' };
           io.emit('bot-error', error);
           logEvent({ type: 'bot-error', ...error });
@@ -655,21 +541,17 @@ io.on('connection', (socket) => {
           cleanupBot(botName);
           activeBots.delete(botName);
         }
-      }, 45000); // 45 second overall connection timeout
+      }, 45000);
 
       let isReady = false;
 
       bot.on('login', () => {
         isReady = true;
         
-        // Clear connection timeout since we successfully logged in
         if (timers.connectionTimeout) {
           clearTimeout(timers.connectionTimeout);
           timers.connectionTimeout = null;
         }
-        
-        // Setup chat interceptor AFTER login
-        setupChatPacketFilter(bot, botName);
         
         const status = { botName, status: 'connected', message: 'Connected' };
         io.emit('bot-status', status);
@@ -692,7 +574,6 @@ io.on('connection', (socket) => {
       });
       
       bot.on('spawn', () => {
-        // Clear connection timeout since we successfully spawned
         if (timers.connectionTimeout) {
           clearTimeout(timers.connectionTimeout);
           timers.connectionTimeout = null;
@@ -716,39 +597,30 @@ io.on('connection', (socket) => {
         setupAntiAFK(bot, botName, settings);
       });
       
+      // === 🔥 RAW CHAT HANDLING — EXACTLY AS YOU WANTED ===
       bot.on('message', (jsonMsg) => {
         if (!isReady) return;
-        try {
-          const chat = { botName, username: 'Server', message: jsonMsg.toString() };
-          io.emit('bot-chat', chat);
-          logEvent({ type: 'bot-chat', ...chat });
-        } catch (err) {
-          // Handled by interceptor
-        }
+        const rawText = jsonMsg.toString();
+        const logLine = `[CHAT] ${rawText}`;
+        io.emit('bot-chat', { botName, username: 'Server', message: logLine });
+        logEvent({ type: 'bot-chat', botName, message: logLine });
       });
-      
+
       bot.on('chat', (username, message) => {
         if (!isReady) return;
-        try {
-          const chat = { botName, username, message };
-          io.emit('bot-chat', chat);
-          logEvent({ type: 'bot-chat', ...chat });
-        } catch (err) {
-          // Handled by interceptor
-        }
+        const logLine = `[CHAT] ${username}: ${message}`;
+        io.emit('bot-chat', { botName, username, message: logLine });
+        logEvent({ type: 'bot-chat', botName, message: logLine });
       });
+      // === 🔥 END RAW CHAT ===
       
       bot.on('error', (err) => {
         const message = err.message || '';
-        
-        // Silently suppress chat format and packet read errors
         if (message.includes('unknown chat format code') || 
             message.includes('PartialReadError') ||
             message.includes('Unexpected buffer end')) {
           return;
         }
-        
-        // Handle timeout specifically
         if (message.includes('timed out')) {
           const error = { botName, error: 'Connection timeout - check server status and version' };
           io.emit('bot-error', error);
@@ -757,8 +629,7 @@ io.on('connection', (socket) => {
           activeBots.delete(botName);
           return;
         }
-        
-        if (message.includes('https://www.microsoft.com/link')) {
+        if (message.includes('https://www.microsoft.com/link  ')) {
           const codeMatch = message.match(/use the code ([A-Z0-9]+)/);
           const authEvent = { 
             botName, 
@@ -839,7 +710,6 @@ io.on('connection', (socket) => {
       
       for (const botData of bots) {
         if (!activeBots.has(botData.username)) {
-          // Delay between each bot to avoid overwhelming the server
           setTimeout(() => {
             socket.emit('connect-bot', { botName: botData.username, version });
           }, bots.indexOf(botData) * 1000);
@@ -938,7 +808,6 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-// Global error handlers to prevent crashes
 process.on('uncaughtException', (err) => {
   const msg = err.message || '';
   if (msg.includes('unknown chat format code') || 
@@ -946,7 +815,6 @@ process.on('uncaughtException', (err) => {
       msg.includes('Unexpected buffer end') ||
       msg.includes('partial packet') ||
       msg.includes('Chunk size is')) {
-    // Silently suppress packet parsing errors
     return;
   }
   console.error('Uncaught Exception:', err);
@@ -958,7 +826,6 @@ process.on('unhandledRejection', (reason, promise) => {
       msg.includes('Unexpected buffer end') ||
       msg.includes('partial packet') ||
       msg.includes('Chunk size is')) {
-    // Silently suppress packet parsing errors
     return;
   }
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
