@@ -398,19 +398,52 @@ function setupAntiAFK(bot, botName, settings) {
     }
 
     try {
+      // FIX: Perform actions sequentially with proper timing
       if (config.physical.forward) {
         bot.setControlState('forward', true);
-        setTimeout(() => bot && !bot._client.ended && bot.setControlState('forward', false), 500);
+        setTimeout(() => {
+          if (bot && !bot._client.ended) {
+            bot.setControlState('forward', false);
+          }
+        }, 500);
       }
+      
       if (config.physical.jump) {
-        bot.setControlState('jump', true);
-        setTimeout(() => bot && !bot._client.ended && bot.setControlState('jump', false), 500);
+        setTimeout(() => {
+          if (bot && !bot._client.ended) {
+            bot.setControlState('jump', true);
+            setTimeout(() => {
+              if (bot && !bot._client.ended) {
+                bot.setControlState('jump', false);
+              }
+            }, 100); // Jump is quick
+          }
+        }, 600); // After forward movement
       }
+      
       if (config.physical.head) {
-        bot.look(Math.random() * Math.PI * 2, (Math.random() - 0.5) * Math.PI);
+        setTimeout(() => {
+          if (bot && !bot._client.ended) {
+            bot.look(Math.random() * Math.PI * 2, (Math.random() - 0.5) * Math.PI);
+          }
+        }, 800);
       }
-      if (config.physical.arm) bot.swingArm();
-      if (config.chat.send && config.chat.message) bot.chat(config.chat.message);
+      
+      if (config.physical.arm) {
+        setTimeout(() => {
+          if (bot && !bot._client.ended) {
+            bot.swingArm();
+          }
+        }, 1000);
+      }
+      
+      if (config.chat.send && config.chat.message) {
+        setTimeout(() => {
+          if (bot && !bot._client.ended) {
+            bot.chat(config.chat.message);
+          }
+        }, 1200);
+      }
     } catch (err) {
       console.error(`Anti-AFK error for ${botName}:`, err);
     }
@@ -591,6 +624,24 @@ io.on('connection', (socket) => {
       const bot = mineflayer.createBot(botOptions);
       activeBots.set(botName, bot);
       botTimers.set(botName, {});
+
+      // CRITICAL FIX: Suppress packet parsing errors at the client level
+      if (bot._client) {
+        const client = bot._client;
+        
+        // Intercept packet errors before they crash
+        client.on('error', (err) => {
+          const msg = err.message || '';
+          if (msg.includes('partial packet') || 
+              msg.includes('PartialReadError') ||
+              msg.includes('Chunk size is')) {
+            // Silently ignore packet parsing errors
+            return;
+          }
+          // Let other errors pass through normally
+          client.emit('realError', err);
+        });
+      }
 
       // CRITICAL FIX: Add connection timeout handler
       const timers = botTimers.get(botName);
@@ -892,7 +943,9 @@ process.on('uncaughtException', (err) => {
   const msg = err.message || '';
   if (msg.includes('unknown chat format code') || 
       msg.includes('PartialReadError') ||
-      msg.includes('Unexpected buffer end')) {
+      msg.includes('Unexpected buffer end') ||
+      msg.includes('partial packet') ||
+      msg.includes('Chunk size is')) {
     // Silently suppress packet parsing errors
     return;
   }
@@ -901,7 +954,10 @@ process.on('uncaughtException', (err) => {
 
 process.on('unhandledRejection', (reason, promise) => {
   const msg = reason?.message || reason?.toString() || '';
-  if (msg.includes('PartialReadError') || msg.includes('Unexpected buffer end')) {
+  if (msg.includes('PartialReadError') || 
+      msg.includes('Unexpected buffer end') ||
+      msg.includes('partial packet') ||
+      msg.includes('Chunk size is')) {
     // Silently suppress packet parsing errors
     return;
   }
