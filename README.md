@@ -6,115 +6,100 @@
 ![Socket.io](https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101)
 ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
 
-This project is a web-based client for managing AFK bots on a Minecraft server. It provides a user-friendly interface to connect, control, and monitor multiple bots simultaneously.
+<br/>
 
-## Features
-
-*   **Multi-bot management:** Connect and control multiple bots from a single interface.
-*   **Real-time chat:** Monitor the in-game chat and send messages through your bots.
-*   **Spam control:** Configure and toggle spam messages with customizable delays.
-*   **Live dashboard:** View the status and information of your bots in real-time.
-*   **Proxy support:** Connect your bots through proxies for enhanced privacy and security.
+**Web AFK Client** is a premium, web-based tool for managing Minecraft bot accounts. Designed with a sleek dark theme and modern UI, it offers powerful features for AFK farming, chat monitoring, and bot management—all from your browser.
 
 ---
 
-## Installation Guide
+## ✨ Features
 
-This guide provides instructions for setting up both the **Backend** and **Frontend** services. You must have both running for the application to work.
+- **Multi-Bot Management**: Connect unlimited bots simultaneously.
+- **Live Chat Console**: Monitor server chat and send messages in real-time.
+- **Movement Controls**: Move bots (WASD, Jump) directly from the web interface.
+- **Anti-AFK**: Built-in logic to prevent being kicked for inactivity.
+- **Auto-Reconnect**: Automatically reconnects bots if they get disconnected.
+- **Proxy Support**: Route bots through SOCKS/HTTP proxies for security.
+- **Account Manager**: Save and manage bot credentials easily.
+- **Configurable Settings**: Toggle physics, sneaking, and custom join messages.
+
+---
+
+## 🚀 Installation & Setup
+
+You need to run both the **Backend** (bot manager) and **Frontend** (web interface) for the application to work.
 
 ### Prerequisites
+- [Node.js](https://nodejs.org/) (v16 or higher)
+- [Git](https://git-scm.com/)
 
-*   **Node.js:** Make sure you have Node.js installed. You can download it from [https://nodejs.org/](https://nodejs.org/).
-*   **Git:** You will need Git to clone the repository. You can download it from [https://git-scm.com/](https://git-scm.com/).
+### 1. Backend Setup (Port 25582)
 
-### 1. Clone the Repository
+The backend handles the Minecraft bot connections.
 
-First, clone the repository to your local machine or VPS:
-
-```bash
-git clone https://github.com/darkosBE/WAC-PROJECT
-cd WAC-PROJECT
-```
-
----
-
-### 2. Backend Setup
-
-The backend service runs the bot manager on port `1043`.
-
-1.  **Navigate to the backend directory:**
+1.  Navigate to the `backend` folder:
     ```bash
-    # From the root of the project (WAC-PROJECT)
-    cd docs/backend
+    cd backend
     ```
+2.  Install dependencies:
+    ```bash
+    npm install
+    # Optional: Install pathfinder for smart movement
+    # npm install mineflayer-pathfinder
+    ```
+3.  Start the server:
+    ```bash
+    npm start
+    ```
+    *The backend will start on port `25582`.*
 
-2.  **Install backend dependencies:**
+### 2. Frontend Setup (Port 8080)
+
+The frontend provides the user interface.
+
+1.  Navigate to the project root (where this README is):
+    ```bash
+    cd ..
+    ```
+2.  Install dependencies:
     ```bash
     npm install
     ```
-
-3.  **Start the backend server:**
-    *   **For Windows/Linux (Development):**
-        ```bash
-        npm start
-        ```
-    *   **For a VPS (Production with PM2):**
-        ```bash
-        npm install -g pm2
-        pm2 start npm --name "afk-backend" -- start
-        ```
+3.  Start the development server:
+    ```bash
+    npm run dev
+    ```
+    *Access the client at http://localhost:8080*
 
 ---
 
-### 3. Frontend Setup
+## 📝 Changelog
 
-The frontend service runs the web interface on port `8080`.
+### v1.1.0 - The "Dark Mode" Update
+- **🎨 UI Redesign**: Complete overhaul of the interface with a pure black aesthetic, vibrant accents, and a modern sidebar layout.
+- **🔌 Proxy Logic**: Fully implemented the Proxies page. You can now add, save, and use proxies for your bots.
+- **🕹️ Movement Fixes**: Verified and optimized movement controls (WASD works!).
+- **🐛 Bug Fixes**:
+    - Fixed duplicate socket hooks causing connection issues.
+    - Cleaned up unused imports and placeholder code.
+    - Corrected typos in meta tags.
 
-1.  **Navigate to the frontend directory (root of the project):**
-    ```bash
-    # If you are in the backend directory, go back to the root
-    cd ../../
-    ```
-
-2.  **Install frontend dependencies:**
-    ```bash
-    npm install
-    ```
-
-3.  **Build the frontend:**
-    ```bash
-    npm run build
-    ```
-
-4.  **Start the frontend server:**
-    *   **For Windows/Linux (Development):**
-        ```bash
-        npm start
-        ```
-    *   **For a VPS (Production with PM2):**
-        ```bash
-        # PM2 should already be installed from the backend step
-        pm2 start npm --name "afk-frontend" -- start
-        ```
+### v1.0.0 - Initial Release
+- Basic bot connection and chat functionality.
+- Initial release of the Web AFK Client.
 
 ---
 
-### 4. Accessing the Application
+## 🤝 Contributing
 
-Once both the backend and frontend are running, you can access the web client by navigating to:
+Contributions are welcome! Feel free to open issues or submit pull requests to improve the client.
 
--   **Locally:** `http://localhost:8080`
--   **On a VPS:** `http://<your-vps-ip>:8080`
+## 📄 License
 
-**Important:** Make sure that port `8080` (for the frontend) and `1043` (for the backend) are open on your server's or VPS's firewall.
+This project is licensed under the BSD-3-Clause license.
 
-## Contributing
+---
 
-Contributions are welcome! If you have any ideas, suggestions, or bug reports, please open an issue or submit a pull request.
-
-## License
-
-This project is licensed under the BSD-3-Clause license. See the [LICENSE](LICENSE) file for more details.
-
-Made with Love by 
-YUBS & SYZDARK
+<p align="center">
+  Made with ❤️ by <b>SyzDark</b>
+</p>

@@ -4,6 +4,7 @@
   "description": "A simple server to host the frontend application.",
   "main": "server.js",
   "scripts": {
+    "dev": "vite",
     "start": "node server.js",
     "build": "vite build"
   },

@@ -15,5 +15,5 @@ app.get('*', (req, res) => {
 
 app.listen(port, () => {
   console.log(`Frontend server listening at http://localhost:${port}`);
-  console.log(`Credits to syzdark & Herick For making this project`);
+  console.log(`Credits to syzdark`);
 });
