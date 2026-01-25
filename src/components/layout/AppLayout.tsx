@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { AppSidebar } from '@/components/layout/AppSidebar';
+import { HeroBanner } from '@/components/layout/HeroBanner';
 import { Home, MessageSquare, Users, ToyBrick, Cog, Rss } from 'lucide-react';
 import { useSocketContext } from '@/contexts/SocketContext';
 import { cn } from '@/lib/utils';
@@ -17,12 +18,15 @@ export default function AppLayout() {
   ];
 
   return (
-    <div className="h-screen flex bg-background text-foreground">
+    <div className="h-screen flex bg-black text-foreground">
       <AppSidebar navLinks={navLinks} />
-      <main className="flex-1 h-screen overflow-y-auto p-6">
-        <Outlet />
-      </main>
-      <div 
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        <HeroBanner />
+        <main className="flex-1 overflow-y-auto p-6 bg-background">
+          <Outlet />
+        </main>
+      </div>
+      <div
         className={cn(
           'fixed bottom-4 left-4 px-3 py-1 rounded-full text-xs font-medium',
           'transition-colors duration-300',
