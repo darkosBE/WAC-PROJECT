@@ -156,6 +156,7 @@ export default function ConnectPage() {
             <Label htmlFor="login-delay" className="text-sm text-muted-foreground">Login delay</Label>
             <Input id="login-delay" type="number" value={serverInfo.loginDelay} onChange={e => setServerInfo(s => ({ ...s, loginDelay: parseInt(e.target.value) || 0 }))} className="mt-1 bg-input border-border" />
           </div>
+          <Button variant="secondary" className="w-full font-medium" onClick={handleSaveIp}>Save Info</Button>
           <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium" onClick={handleConnectAll}>Connect</Button>
           <Button variant="destructive" className="w-full font-medium" onClick={handleDisconnectAll}>Disconnect</Button>
         </Card>
