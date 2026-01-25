@@ -107,3 +107,10 @@ This project is licensed under the BSD-3-Clause license.
 
   Sorry if i was gone a bit too long
 </p>
+
+# PREVIEW
+
+IMG BY SYZDARK
+<img width="1915" height="958" alt="image" src="https://github.com/user-attachments/assets/f8d11a6e-9357-4151-932a-d2ba2fb32dd5" />
+
+
