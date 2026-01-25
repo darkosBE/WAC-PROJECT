@@ -75,18 +75,14 @@ The frontend provides the user interface.
 
 ## 📝 Changelog
 
-### v1.1.0 - The "Dark Mode" Update
-- **🎨 UI Redesign**: Complete overhaul of the interface with a pure black aesthetic, vibrant accents, and a modern sidebar layout.
-- **🔌 Proxy Logic**: Fully implemented the Proxies page. You can now add, save, and use proxies for your bots.
-- **🕹️ Movement Fixes**: Verified and optimized movement controls (WASD works!).
-- **🐛 Bug Fixes**:
+### version uhh i lost track - The "Modernazation" Update
+- **UI Redesign**: Complete overhaul of the interface with a pure black aesthetic, vibrant accents, and a modern sidebar layout.
+- **Proxy Logic**: Fully implemented the Proxies page. You can now add, save, and use proxies for your bots.
+- **Movement Fixes**: Verified and optimized movement controls (WASD works!).
+- **Bug Fixes**:
     - Fixed duplicate socket hooks causing connection issues.
     - Cleaned up unused imports and placeholder code.
     - Corrected typos in meta tags.
-
-### v1.0.0 - Initial Release
-- Basic bot connection and chat functionality.
-- Initial release of the Web AFK Client.
 
 ---
 
@@ -102,4 +98,12 @@ This project is licensed under the BSD-3-Clause license.
 
 <p align="center">
   Made with ❤️ by <b>SyzDark</b>
+</p>
+
+---
+
+<p align="center">
+  ahh Yes.<b> I am finally back And updated the code after a few weeks.</b>
+
+  Sorry if i was gone a bit too long
 </p>
