@@ -114,3 +114,7 @@ IMG BY SYZDARK
 <img width="1915" height="958" alt="image" src="https://github.com/user-attachments/assets/f8d11a6e-9357-4151-932a-d2ba2fb32dd5" />
 
 
+## Disclaimer
+
+This project is a **fan-made** tool designed for technical Minecraft players. It is intended as an alternative option for users who want to host their own cloud-based account management with a web GUI, similar to applications like *AFK Console Client*. This project is not affiliated with Mojang Studios, Microsoft, or the developers of AFK Console Client.
+
