@@ -94,13 +94,6 @@ Contributions are welcome! Feel free to open issues or submit pull requests to i
 
 This project is licensed under the BSD-3-Clause license.
 
----
-
-<p align="center">
-  Made with ❤️ by <b>SyzDark</b>
-</p>
-
----
 
 <p align="center">
   ahh Yes.<b> I am finally back And updated the code after a few weeks.</b>
@@ -118,3 +111,20 @@ IMG BY SYZDARK
 
 This project is a **fan-made** tool designed for technical Minecraft players. It is intended as an alternative option for users who want to host their own cloud-based account management with a web GUI, similar to applications like *AFK Console Client*. This project is not affiliated with Mojang Studios, Microsoft, or the developers of AFK Console Client.
 
+## DEVELOPMENT BUILDS
+
+- I have another repo for development builds and it may have alot of bugs. It may break
+- the old code. Or may not work with the old code
+- 
+
+### DEVELOPMENT REPO
+
+(CLICK ME FOR THE REPO)[https://github.com/darkosBE/WAC-DEVELOPMENT]
+
+---
+
+<p align="center">
+  Made with ❤️ by <b>SyzDark</b>
+</p>
+
+---
