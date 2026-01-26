@@ -12,7 +12,7 @@
 
 ---
 
-## ✨ Features
+## Features
 
 - **Multi-Bot Management**: Connect unlimited bots simultaneously.
 - **Live Chat Console**: Monitor server chat and send messages in real-time.
@@ -25,7 +25,7 @@
 
 ---
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
 You need to run both the **Backend** (bot manager) and **Frontend** (web interface) for the application to work.
 
@@ -51,7 +51,7 @@ The backend handles the Minecraft bot connections.
     ```bash
     npm start
     ```
-    *The backend will start on port `25582`.*
+    *The backend will start on port 25582.*
 
 ### 2. Frontend Setup (Port 8080)
 
@@ -73,32 +73,36 @@ The frontend provides the user interface.
 
 ---
 
-## 📝 Changelog
+## Changelog
 
-### version uhh i lost track - The "Modernazation" Update
-- **UI Redesign**: Complete overhaul of the interface with a pure black aesthetic, vibrant accents, and a modern sidebar layout.
-- **Proxy Logic**: Fully implemented the Proxies page. You can now add, save, and use proxies for your bots.
-- **Movement Fixes**: Verified and optimized movement controls (WASD works!).
+### v26.1.1 — The "Dark & Night" Update
+- **Full State Persistence**: Bot statuses, health, experience, and inventories now persist reliably across page refreshes.
+- **Bot Status Persistence**: Dashboard page is now here where you can see health, experience, hunger bar and inventory of your bots.
+- **Chat History Persistence**: Chat messages are now saved in local storage, so they remain visible after a reload.
+- **Enhanced Disconnection**:
+    - Added a functional Leave button to Dashboard cards.
+    - Fixed the Power button on the Connect page to handle all active bot states (spawned, connecting).
+    - Improved Disconnect All robustness to ensure all bots leave consistently.
+- **Real-time Sync**: Implemented an explicit state sync mechanism between backend and frontend.
 - **Bug Fixes**:
-    - Fixed duplicate socket hooks causing connection issues.
-    - Cleaned up unused imports and placeholder code.
-    - Corrected typos in meta tags.
+    - Fixed historic chat messages incorrectly displaying Server as the username.
+    - Added granular backend logging for better event tracing.
+    - Fixed a React hook violation in the Dashboard component.
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-Contributions are welcome! Feel free to open issues or submit pull requests to improve the client.
+Contributions are welcome! Feel free to open issues or submit pull requests to improve the client. Check out the [Contributing Guide](CONTRIBUTING.md) for more details.
 
-## 📄 License
+## License
 
 This project is licensed under the BSD-3-Clause license.
 
-
 <p align="center">
-  ahh Yes.<b> I am finally back And updated the code after a few weeks.</b>
-
-  Sorry if i was gone a bit too long
+  <b>I am finally back and updated the code after a few weeks.</b>
+  <br/>
+  Sorry if I was gone a bit too long.
 </p>
 
 # PREVIEW
@@ -106,16 +110,16 @@ This project is licensed under the BSD-3-Clause license.
 IMG BY SYZDARK
 <img width="1915" height="958" alt="image" src="https://github.com/user-attachments/assets/f8d11a6e-9357-4151-932a-d2ba2fb32dd5" />
 
-
 ## Disclaimer
 
 This project is a **fan-made** tool designed for technical Minecraft players. It is intended as an alternative option for users who want to host their own cloud-based account management with a web GUI, similar to applications like *AFK Console Client*. This project is not affiliated with Mojang Studios, Microsoft, or the developers of AFK Console Client.
 
 ## DEVELOPMENT BUILDS
 
-- I have another repo for development builds and it may have alot of bugs. It may break Old code.
+- I have another repo for development builds and it may have a lot of bugs. It may break old code.
 - TOTAL DEVELOPMENT BUILDS
 - COUNTER: [1]
+- Check out the [Development Build Guide](DEVELOPMENT_BUILD.MD) for technical breakdowns.
 
 ### DEVELOPMENT REPO
 
@@ -124,7 +128,5 @@ This project is a **fan-made** tool designed for technical Minecraft players. It
 ---
 
 <p align="center">
-  Made with ❤️ by <b>SyzDark</b>
+  Made with passion by <b>SyzDark</b>
 </p>
-
----
