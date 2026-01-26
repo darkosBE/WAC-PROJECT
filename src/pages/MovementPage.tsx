@@ -9,15 +9,19 @@ import { Move, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, ChevronsUp, Hand } fro
 export default function MovementPage() {
   const { controlBot, botStatuses } = useSocketContext();
   const [bots, setBots] = useState<BotAccount[]>([]);
-  const [selectedBot, setSelectedBot] = useState<string>('');
+  const [selectedBot, setSelectedBot] = useState<string>(() => localStorage.getItem('selected_bot_movement') || '');
 
   useEffect(() => {
-    getBots().then(setBots).catch(() => {});
+    localStorage.setItem('selected_bot_movement', selectedBot);
+  }, [selectedBot]);
+
+  useEffect(() => {
+    getBots().then(setBots).catch(() => { });
   }, []);
 
-  const isConnected = selectedBot && 
-    (botStatuses[selectedBot]?.status === 'connected' || 
-     botStatuses[selectedBot]?.status === 'spawned');
+  const isConnected = selectedBot &&
+    (botStatuses[selectedBot]?.status === 'connected' ||
+      botStatuses[selectedBot]?.status === 'spawned');
 
   const handleMove = (direction: string) => {
     if (!selectedBot || !isConnected) return;
@@ -73,7 +77,7 @@ export default function MovementPage() {
                 <ArrowUp className="w-7 h-7" />
               </Button>
               <div />
-              
+
               <Button variant="secondary" size="lg" className="w-16 h-16 rounded-lg bg-background/50 hover:bg-primary/10 active:scale-95 transition-all" disabled={!isConnected} onClick={() => handleMove('left')}>
                 <ArrowLeft className="w-7 h-7" />
               </Button>
@@ -83,7 +87,7 @@ export default function MovementPage() {
               <Button variant="secondary" size="lg" className="w-16 h-16 rounded-lg bg-background/50 hover:bg-primary/10 active:scale-95 transition-all" disabled={!isConnected} onClick={() => handleMove('right')}>
                 <ArrowRight className="w-7 h-7" />
               </Button>
-              
+
               <div />
               <Button variant="secondary" size="lg" className="w-16 h-16 rounded-lg bg-background/50 hover:bg-primary/10 active:scale-95 transition-all" disabled={!isConnected} onClick={() => handleMove('back')}>
                 <ArrowDown className="w-7 h-7" />
