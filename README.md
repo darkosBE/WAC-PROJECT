@@ -113,9 +113,9 @@ This project is a **fan-made** tool designed for technical Minecraft players. It
 
 ## DEVELOPMENT BUILDS
 
-- I have another repo for development builds and it may have alot of bugs. It may break
-- the old code. Or may not work with the old code
-- 
+- I have another repo for development builds and it may have alot of bugs. It may break Old code.
+- TOTAL DEVELOPMENT BUILDS
+- COUNTER: [1]
 
 ### DEVELOPMENT REPO
 
