@@ -119,7 +119,7 @@ This project is a **fan-made** tool designed for technical Minecraft players. It
 
 ### DEVELOPMENT REPO
 
-(CLICK ME FOR THE REPO)[https://github.com/darkosBE/WAC-DEVELOPMENT]
+[CLICK ME FOR THE REPO](https://github.com/darkosBE/WAC-DEVELOPMENT)
 
 ---
 
