@@ -75,7 +75,7 @@ The frontend provides the user interface.
 
 ## Changelog
 
-### v26.1.1 — The "Dark & Night" Update
+### v26.1.1 — The "Frontend Polishment" Update
 - **Full State Persistence**: Bot statuses, health, experience, and inventories now persist reliably across page refreshes.
 - **Bot Status Persistence**: Dashboard page is now here where you can see health, experience, hunger bar and inventory of your bots.
 - **Chat History Persistence**: Chat messages are now saved in local storage, so they remain visible after a reload.
