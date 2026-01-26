@@ -12,7 +12,11 @@ import { cn } from '@/lib/utils';
 export default function ChatPage() {
   const { chatMessages, sendChat, sendSpam, clearChat } = useSocketContext();
   const [bots, setBots] = useState<BotAccount[]>([]);
-  const [selectedBot, setSelectedBot] = useState<string>('');
+  const [selectedBot, setSelectedBot] = useState<string>(() => localStorage.getItem('selected_bot_chat') || '');
+
+  useEffect(() => {
+    localStorage.setItem('selected_bot_chat', selectedBot);
+  }, [selectedBot]);
   const [message, setMessage] = useState('');
   const [spamMessage, setSpamMessage] = useState('');
   const [spamDelay, setSpamDelay] = useState(20);
@@ -20,7 +24,7 @@ export default function ChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getBots().then(setBots).catch(() => {});
+    getBots().then(setBots).catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -79,7 +83,7 @@ export default function ChatPage() {
                   </div>
                 ) : (
                   chatMessages.map((msg, i) => (
-                    <div key={i} className="py-1 animate-fade-in-up" style={{ animationDelay: `${i * 30}ms`}}>
+                    <div key={i} className="py-1 animate-fade-in-up" style={{ animationDelay: `${i * 30}ms` }}>
                       <span className="text-primary">[{msg.botName}]</span>{' '}
                       <span className="text-muted-foreground">{msg.username}:</span>{' '}
                       <span className="text-foreground break-words whitespace-pre-wrap">{msg.message}</span>
@@ -102,7 +106,7 @@ export default function ChatPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Input 
+              <Input
                 placeholder="Type a message..."
                 value={message}
                 onChange={e => setMessage(e.target.value)}
@@ -142,7 +146,7 @@ export default function ChatPage() {
 
             <div>
               <label className="text-sm font-medium text-muted-foreground">Message</label>
-              <Input 
+              <Input
                 placeholder="Spam message"
                 value={spamMessage}
                 onChange={e => setSpamMessage(e.target.value)}
@@ -153,7 +157,7 @@ export default function ChatPage() {
 
             <div>
               <label className="text-sm font-medium text-muted-foreground">Delay (seconds)</label>
-              <Input 
+              <Input
                 type="number"
                 min={1}
                 value={spamDelay}
@@ -163,7 +167,7 @@ export default function ChatPage() {
               />
             </div>
 
-            <Button 
+            <Button
               onClick={handleSpamToggle}
               disabled={!selectedBot || !spamMessage.trim()}
               variant={spamEnabled ? "destructive" : "default"}

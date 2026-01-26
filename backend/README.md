@@ -1,34 +1,70 @@
-# AFK Console - Backend
+# AFK Console Client - Backend Setup
 
-This service handles Minecraft bot connections and state management using Mineflayer and Socket.IO.
+## Quick Start
 
-## Setup
+1. Copy these files to your server/VPS
+2. Run `npm install`
+3. Run `node start.js` or `npm start`
+4. Backend will start on port **1043**
 
-```bash
-npm install
-npm start
-```
+## Frontend Connection
 
-Runs on port **25582** by default.
+### If Backend is on the Same Computer:
+1. Open the frontend app
+2. Go to **Settings** page
+3. URL should be: `http://localhost:1043`
+4. Click "Test" to verify connection
+5. Click "Save & Reconnect"
 
-## Configuration
+### If Backend is on a Different Computer:
+1. Find your backend server's IP address:
+   - Windows: Run `ipconfig` in command prompt
+   - Linux/Mac: Run `ifconfig` or `ip addr` in terminal
+2. Go to **Settings** page in the frontend
+3. Enter: `http://YOUR_SERVER_IP:1043` (e.g., `http://192.168.1.100:1043`)
+4. Click "Test" to verify connection
+5. Click "Save & Reconnect"
 
-Data is stored in the `data/` directory (created on first run):
-- `settings.json`: Global configuration (Anti-AFK, reconnect delays).
-- `bots.json`: Saved bot credentials.
-- `proxies.txt`: List of proxies for bot rotation.
+## Troubleshooting
 
-## API Reference
+### Connection Failed Error:
 
-The backend exposes a REST API for configuration and a Socket.IO namespace for real-time bot control.
+1. **Check if backend is running:**
+   - You should see: "AFK Console Backend running on http://localhost:1043"
+   - If not, run `node start.js` in the backend directory
 
-### HTTP Endpoints
-- `GET /api/info` - Server version/IP info
-- `GET /api/settings` - Global settings
-- `GET /api/bots` - List of saved bots
-- `GET /api/proxies` - List of proxies
+2. **Firewall issues:**
+   - Windows: Allow Node.js through Windows Firewall
+   - Linux: Run `sudo ufw allow 1043`
 
-### Socket.IO Events
-- `connect-bot`: Request to connect a specific bot.
-- `disconnect-bot`: Request to disconnect a bot.
-- `control-bot`: Send movement/action commands (WASD, jump, etc).
+3. **Network issues:**
+   - Make sure both frontend and backend are on the same network
+   - Check if you can ping the backend server
+
+4. **Browser console:**
+   - Press F12 in your browser
+   - Check the Console tab for detailed error messages
+   - Look for CORS errors or network errors
+
+5. **Test with curl:**
+   ```bash
+   curl http://localhost:1043/api/info
+   ```
+   Should return JSON data if backend is working
+
+## Features
+
+- Multi-bot management
+- Real-time chat monitoring via Socket.IO
+- Anti-AFK system with configurable actions
+- Auto-reconnect on disconnect
+- Multi join/world change messages
+- JSON persistence for settings
+
+## CORS
+
+The server.js includes CORS headers to allow connections from any frontend origin.
+
+## Port Configuration
+
+The backend uses port **1043** by default. To change it, edit the `PORT` variable in `server.js`.

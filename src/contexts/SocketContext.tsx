@@ -1,5 +1,12 @@
 import { createContext, useContext, ReactNode } from 'react';
-import { useSocket, BotStatusEvent, BotChatEvent } from '../hooks/useSocket';
+import {
+  useSocket,
+  BotStatusEvent,
+  BotChatEvent,
+  BotHealthEvent,
+  BotExperienceEvent,
+  BotInventoryEvent
+} from '../hooks/useSocket';
 import { LogEntry } from '../lib/api';
 
 // Define the shape of the context
@@ -7,9 +14,12 @@ import { LogEntry } from '../lib/api';
 interface SocketContextType {
   isConnected: boolean;
   botStatuses: Record<string, BotStatusEvent>;
+  botHealths: Record<string, BotHealthEvent>;
+  botExperiences: Record<string, BotExperienceEvent>;
+  botInventories: Record<string, BotInventoryEvent>;
   chatMessages: BotChatEvent[];
   lastLog: LogEntry | null;
-  connectBot: (botName: string, version: string) => void; 
+  connectBot: (botName: string, version: string) => void;
   disconnectBot: (botName: string) => void;
   sendChat: (botName: string, message: string) => void;
   sendSpam: (botName: string, message: string, delay: number, enable: boolean) => void;

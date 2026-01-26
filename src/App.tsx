@@ -7,6 +7,7 @@ import MovementPage from '@/pages/MovementPage';
 import ProxiesPage from '@/pages/ProxiesPage';
 import SettingsPage from '@/pages/SettingsPage';
 import CreditsPage from '@/pages/CreditsPage';
+import DashboardPage from '@/pages/DashboardPage';
 import NotFound from '@/pages/NotFound';
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<AppLayout />}>
         <Route index element={<ConnectPage />} />
+        <Route path="dashboard" element={<DashboardPage />} />
         <Route path="chat" element={<ChatPage />} />
         <Route path="accounts" element={<AccountsPage />} />
         <Route path="movement" element={<MovementPage />} />

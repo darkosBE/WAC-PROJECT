@@ -46,10 +46,13 @@ export function BotCard({ username, status, onConnect, onDisconnect }: BotCardPr
 
           <div className="flex items-center gap-2">
             {isOnline || isConnecting ? (
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 size="sm"
-                onClick={onDisconnect}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDisconnect();
+                }}
                 disabled={isConnecting}
               >
                 {isConnecting ? (
@@ -59,8 +62,8 @@ export function BotCard({ username, status, onConnect, onDisconnect }: BotCardPr
                 )}
               </Button>
             ) : (
-              <Button 
-                variant="default" 
+              <Button
+                variant="default"
                 size="sm"
                 onClick={onConnect}
               >

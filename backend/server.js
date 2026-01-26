@@ -22,6 +22,15 @@ const PORT = 25582;
 // Store active bots and their timers
 const activeBots = new Map();
 const botTimers = new Map();
+const manualDisconnects = new Set();
+const botStatuses = new Map();
+
+function updateBotStatus(botName, statusData) {
+  const data = { botName, ...statusData };
+  botStatuses.set(botName, data);
+  io.emit('bot-status', data);
+  logEvent({ type: 'bot-status', ...data });
+}
 
 // File paths
 const DATA_DIR = path.join(__dirname, 'data');
@@ -46,11 +55,11 @@ async function loadOrCreateFile(filePath, defaultData) {
   try {
     const data = await fs.readFile(filePath, 'utf8');
     if (filePath.endsWith('.json')) {
-        return JSON.parse(data);
+      return JSON.parse(data);
     }
     return data;
   } catch (err) {
-      const data = filePath.endsWith('.json') ? JSON.stringify(defaultData, null, 2) : defaultData;
+    const data = filePath.endsWith('.json') ? JSON.stringify(defaultData, null, 2) : defaultData;
     await fs.writeFile(filePath, data);
     return defaultData;
   }
@@ -111,14 +120,14 @@ async function migrateBotsIfNecessary(bots, save = false) {
 // Initialize default data
 async function initializeData() {
   await ensureDataDir();
-  
+
   const defaultInfo = {
     serverIP: 'localhost',
     serverPort: 25565,
     version: '1.20.1',
     loginDelay: 5
   };
-  
+
   const defaultSettings = {
     sneak: false,
     botPhysics: true,
@@ -135,21 +144,21 @@ async function initializeData() {
     proxies: false,
     fakeHost: false
   };
-  
+
   const defaultBots = [];
   const defaultLogs = [];
   const defaultVersion = { version: '1.0.0' };
-  
+
   const info = await loadOrCreateFile(INFO_FILE, defaultInfo);
   let settings = await loadOrCreateFile(SETTINGS_FILE, defaultSettings);
   let bots = await loadOrCreateFile(BOTS_FILE, defaultBots);
   await loadOrCreateFile(PROXIES_FILE, '');
   await loadOrCreateFile(LOGS_FILE, defaultLogs);
   await loadOrCreateFile(VERSION_FILE, defaultVersion);
-  
+
   settings = await migrateSettingsIfNecessary(settings, true);
   bots = await migrateBotsIfNecessary(bots, true);
-  
+
   return { info, settings, bots };
 }
 
@@ -224,21 +233,21 @@ app.post('/api/bots', async (req, res) => {
 });
 
 app.get('/api/proxies', async (req, res) => {
-    try {
-        const proxies = await loadOrCreateFile(PROXIES_FILE, '');
-        res.send(proxies);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    const proxies = await loadOrCreateFile(PROXIES_FILE, '');
+    res.send(proxies);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/proxies', async (req, res) => {
-    try {
-        await saveFile(PROXIES_FILE, req.body.proxies);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    await saveFile(PROXIES_FILE, req.body.proxies);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/api/version', async (req, res) => {
@@ -367,6 +376,8 @@ async function logEvent(event) {
   const logs = await loadOrCreateFile(LOGS_FILE, []);
   const newLog = { ...event, timestamp: new Date().toISOString() };
   logs.push(newLog);
+  // Keep only last 500 logs to prevent file bloat
+  if (logs.length > 500) logs.shift();
   await saveFile(LOGS_FILE, logs);
   io.emit('new-log', newLog);
 }
@@ -406,7 +417,7 @@ function setupAntiAFK(bot, botName, settings) {
           }
         }, 500);
       }
-      
+
       if (config.physical.jump) {
         setTimeout(() => {
           if (bot && !bot._client.ended) {
@@ -419,7 +430,7 @@ function setupAntiAFK(bot, botName, settings) {
           }
         }, 600);
       }
-      
+
       if (config.physical.head) {
         setTimeout(() => {
           if (bot && !bot._client.ended) {
@@ -427,7 +438,7 @@ function setupAntiAFK(bot, botName, settings) {
           }
         }, 800);
       }
-      
+
       if (config.physical.arm) {
         setTimeout(() => {
           if (bot && !bot._client.ended) {
@@ -435,7 +446,7 @@ function setupAntiAFK(bot, botName, settings) {
           }
         }, 1000);
       }
-      
+
       if (config.chat.send && config.chat.message) {
         setTimeout(() => {
           if (bot && !bot._client.ended) {
@@ -454,12 +465,80 @@ function setupAntiAFK(bot, botName, settings) {
 }
 
 // Socket.IO handlers
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   console.log('Client connected:', socket.id);
-  
+
+  // Function to sync all bot data to a specific socket
+  const syncBotData = async (targetSocket) => {
+    console.log(`[SYNC] Starting sync for ${botStatuses.size} known statuses to client ${targetSocket.id}`);
+    for (const [botName, status] of botStatuses.entries()) {
+      console.log(`[SYNC] Bot: ${botName}, Status: ${status.status}`);
+      targetSocket.emit('bot-status', status);
+
+      const bot = activeBots.get(botName);
+      if (bot) {
+        // Sync health
+        if (bot.health !== undefined) {
+          targetSocket.emit('bot-health', {
+            botName,
+            health: bot.health,
+            food: bot.food,
+            saturation: bot.foodSaturation
+          });
+        }
+
+        // Sync experience
+        if (bot.experience) {
+          targetSocket.emit('bot-experience', {
+            botName,
+            level: bot.experience.level,
+            points: bot.experience.points,
+            progress: bot.experience.progress
+          });
+        }
+
+        // Sync inventory
+        if (bot.inventory) {
+          const items = bot.inventory.items().map(item => ({
+            type: item.type,
+            count: item.count,
+            displayName: item.displayName,
+            name: item.name,
+            slot: item.slot
+          }));
+          targetSocket.emit('bot-inventory', { botName, items });
+        }
+      }
+    }
+
+    // Sync chat history (last 50 messages)
+    try {
+      const logs = await loadOrCreateFile(LOGS_FILE, []);
+      const chatLogs = logs.filter(l => l.type === 'bot-chat').slice(-50);
+      chatLogs.forEach(log => {
+        targetSocket.emit('bot-chat', {
+          botName: log.botName,
+          username: log.chatUsername || 'Server',
+          message: log.message
+        });
+      });
+    } catch (err) { }
+  };
+
+  // Initial sync on connection
+  await syncBotData(socket);
+
+  // Explicit sync request from client
+  socket.on('request-sync', async () => {
+    console.log(`Sync requested by client: ${socket.id}`);
+    await syncBotData(socket);
+  });
+
   socket.on('connect-bot', async (data) => {
     const { botName, version } = data;
-    
+    console.log(`[EVENT] connect-bot received for ${botName}`);
+    manualDisconnects.delete(botName);
+
     try {
       if (activeBots.has(botName)) {
         const error = { botName, error: 'Bot already connected' };
@@ -473,7 +552,7 @@ io.on('connection', (socket) => {
       settings = await migrateSettingsIfNecessary(settings, true);
       let bots = await loadOrCreateFile(BOTS_FILE, []);
       bots = await migrateBotsIfNecessary(bots, true);
-      
+
       const botData = bots.find(b => b.username === botName);
       if (!botData) {
         const error = { botName, error: 'Bot not found' };
@@ -481,13 +560,11 @@ io.on('connection', (socket) => {
         logEvent({ type: 'bot-error', ...error });
         return;
       }
-      
-      const status = { botName, status: 'connecting', message: 'Connecting...' };
-      io.emit('bot-status', status);
-      logEvent({ type: 'bot-status', ...status });
-      
+
+      updateBotStatus(botName, { status: 'connecting', message: 'Connecting...' });
+
       await new Promise(resolve => setTimeout(resolve, info.loginDelay * 1000));
-      
+
       const botOptions = {
         host: info.serverIP,
         port: info.serverPort || 25565,
@@ -504,16 +581,16 @@ io.on('connection', (socket) => {
         const proxies = await loadOrCreateFile(PROXIES_FILE, '');
         const proxyList = proxies.split('\n').filter(p => p.trim() !== '');
         if (proxyList.length > 0) {
-            const proxy = proxyList[Math.floor(Math.random() * proxyList.length)];
-            const [host, port, username, password] = proxy.split(':');
-            botOptions.agent = new ProxyAgent({ protocol: 'http', host, port, auth: username && password ? `${username}:${password}` : undefined });
+          const proxy = proxyList[Math.floor(Math.random() * proxyList.length)];
+          const [host, port, username, password] = proxy.split(':');
+          botOptions.agent = new ProxyAgent({ protocol: 'http', host, port, auth: username && password ? `${username}:${password}` : undefined });
         }
       }
-      
+
       if (botOptions.auth === 'microsoft' && botData.password) {
         botOptions.password = botData.password;
       }
-      
+
       const bot = mineflayer.createBot(botOptions);
       activeBots.set(botName, bot);
       botTimers.set(botName, {});
@@ -522,9 +599,9 @@ io.on('connection', (socket) => {
         const client = bot._client;
         client.on('error', (err) => {
           const msg = err.message || '';
-          if (msg.includes('partial packet') || 
-              msg.includes('PartialReadError') ||
-              msg.includes('Chunk size is')) {
+          if (msg.includes('partial packet') ||
+            msg.includes('PartialReadError') ||
+            msg.includes('Chunk size is')) {
             return;
           }
           client.emit('realError', err);
@@ -537,7 +614,7 @@ io.on('connection', (socket) => {
           const error = { botName, error: 'Connection timeout - server may be unresponsive' };
           io.emit('bot-error', error);
           logEvent({ type: 'bot-error', ...error });
-          try { bot.quit(); } catch (e) {}
+          try { bot.quit(); } catch (e) { }
           cleanupBot(botName);
           activeBots.delete(botName);
         }
@@ -547,16 +624,14 @@ io.on('connection', (socket) => {
 
       bot.on('login', () => {
         isReady = true;
-        
+
         if (timers.connectionTimeout) {
           clearTimeout(timers.connectionTimeout);
           timers.connectionTimeout = null;
         }
-        
-        const status = { botName, status: 'connected', message: 'Connected' };
-        io.emit('bot-status', status);
-        logEvent({ type: 'bot-status', ...status });
-        
+
+        updateBotStatus(botName, { status: 'connected', message: 'Connected' });
+
         if (settings.joinMessages && Array.isArray(settings.joinMessagesList)) {
           setTimeout(() => {
             if (bot && !bot._client.ended) {
@@ -567,22 +642,20 @@ io.on('connection', (socket) => {
             }
           }, (settings.joinMessageDelay || 2) * 1000);
         }
-        
+
         if (settings.sneak) {
           setTimeout(() => bot && !bot._client.ended && bot.setControlState('sneak', true), 500);
         }
       });
-      
+
       bot.on('spawn', () => {
         if (timers.connectionTimeout) {
           clearTimeout(timers.connectionTimeout);
           timers.connectionTimeout = null;
         }
-        
-        const status = { botName, status: 'spawned', message: 'Spawned' };
-        io.emit('bot-status', status);
-        logEvent({ type: 'bot-status', ...status });
-        
+
+        updateBotStatus(botName, { status: 'spawned', message: 'Spawned' });
+
         if (settings.worldChangeMessages && Array.isArray(settings.worldChangeMessagesList)) {
           setTimeout(() => {
             if (bot && !bot._client.ended) {
@@ -593,32 +666,73 @@ io.on('connection', (socket) => {
             }
           }, (settings.worldChangeMessageDelay || 5) * 1000);
         }
-        
+
         setupAntiAFK(bot, botName, settings);
       });
-      
+
       // === 🔥 RAW CHAT HANDLING — EXACTLY AS YOU WANTED ===
       bot.on('message', (jsonMsg) => {
         if (!isReady) return;
         const rawText = jsonMsg.toString();
         const logLine = `[CHAT] ${rawText}`;
+        console.log(`[DEBUG] Received message for ${botName}: ${rawText.substring(0, 50)}...`);
         io.emit('bot-chat', { botName, username: 'Server', message: logLine });
-        logEvent({ type: 'bot-chat', botName, message: logLine });
+        logEvent({ type: 'bot-chat', botName, chatUsername: 'Server', message: logLine });
       });
+
+      bot.on('health', () => {
+        if (!isReady) return;
+        io.emit('bot-health', {
+          botName,
+          health: bot.health,
+          food: bot.food,
+          saturation: bot.foodSaturation
+        });
+      });
+
+      bot.on('experience', () => {
+        if (!isReady) return;
+        io.emit('bot-experience', {
+          botName,
+          level: bot.experience.level,
+          points: bot.experience.points,
+          progress: bot.experience.progress
+        });
+      });
+
+      // Debounced inventory update
+      let inventoryUpdateTimer = null;
+      const sendInventory = () => {
+        if (!isReady || !bot.inventory) return;
+        const items = bot.inventory.items().map(item => ({
+          type: item.type,
+          count: item.count,
+          displayName: item.displayName,
+          name: item.name,
+          slot: item.slot
+        }));
+        io.emit('bot-inventory', { botName, items });
+      };
+
+      bot.inventory.on('updateSlot', () => {
+        if (inventoryUpdateTimer) clearTimeout(inventoryUpdateTimer);
+        inventoryUpdateTimer = setTimeout(sendInventory, 500);
+      });
+
 
       bot.on('chat', (username, message) => {
         if (!isReady) return;
         const logLine = `[CHAT] ${username}: ${message}`;
         io.emit('bot-chat', { botName, username, message: logLine });
-        logEvent({ type: 'bot-chat', botName, message: logLine });
+        logEvent({ type: 'bot-chat', botName, chatUsername: username, message: logLine });
       });
       // === 🔥 END RAW CHAT ===
-      
+
       bot.on('error', (err) => {
         const message = err.message || '';
-        if (message.includes('unknown chat format code') || 
-            message.includes('PartialReadError') ||
-            message.includes('Unexpected buffer end')) {
+        if (message.includes('unknown chat format code') ||
+          message.includes('PartialReadError') ||
+          message.includes('Unexpected buffer end')) {
           return;
         }
         if (message.includes('timed out')) {
@@ -631,10 +745,10 @@ io.on('connection', (socket) => {
         }
         if (message.includes('https://www.microsoft.com/link  ')) {
           const codeMatch = message.match(/use the code ([A-Z0-9]+)/);
-          const authEvent = { 
-            botName, 
+          const authEvent = {
+            botName,
             code: codeMatch ? codeMatch[1] : 'N/A',
-            message: message 
+            message: message
           };
           io.emit('microsoft-auth', authEvent);
           logEvent({ type: 'microsoft-auth', ...authEvent });
@@ -644,15 +758,13 @@ io.on('connection', (socket) => {
           logEvent({ type: 'bot-error', ...error });
         }
       });
-      
+
       bot.on('end', (reason) => {
-        const status = { botName, status: 'disconnected', message: `${reason || 'Unknown'}` };
-        io.emit('bot-status', status);
-        logEvent({ type: 'bot-status', ...status });
+        updateBotStatus(botName, { status: 'disconnected', message: `${reason || 'Unknown'}` });
         cleanupBot(botName);
         activeBots.delete(botName);
-        
-        if (settings.autoReconnect) {
+
+        if (settings.autoReconnect && !manualDisconnects.has(botName)) {
           const timer = setTimeout(() => {
             const reconnectEvent = { botName };
             io.emit('reconnecting-bot', reconnectEvent);
@@ -664,7 +776,7 @@ io.on('connection', (socket) => {
           botTimers.set(botName, timers);
         }
       });
-      
+
       bot.on('kicked', (reason) => {
         const status = { botName, status: 'kicked', message: `${reason}` };
         io.emit('bot-status', status);
@@ -676,7 +788,7 @@ io.on('connection', (socket) => {
         io.emit('bot-status', status);
         logEvent({ type: 'bot-status', ...status });
       });
-      
+
     } catch (err) {
       const error = { botName, error: err.message };
       io.emit('bot-error', error);
@@ -685,29 +797,36 @@ io.on('connection', (socket) => {
       activeBots.delete(botName);
     }
   });
-  
+
   socket.on('disconnect-bot', (data) => {
     const { botName } = data;
-    const bot = activeBots.get(botName);
-    if (bot) {
-      const timers = botTimers.get(botName) || {};
-      if(timers.reconnect) clearTimeout(timers.reconnect);
-      if(timers.connectionTimeout) clearTimeout(timers.connectionTimeout);
+    console.log(`[EVENT] disconnect-bot received for ${botName}`);
+    manualDisconnects.add(botName);
 
-      try { bot.quit(); } catch (err) {}
-      cleanupBot(botName);
-      activeBots.delete(botName);
-      const status = { botName, status: 'disconnected', message: 'Manual disconnect' };
-      io.emit('bot-status', status);
-      logEvent({ type: 'bot-status', ...status });
+    const bot = activeBots.get(botName);
+    cleanupBot(botName);
+    activeBots.delete(botName);
+
+    if (bot) {
+      try {
+        bot.quit();
+        // Force close if it doesn't close on its own
+        if (bot._client) {
+          setTimeout(() => {
+            try { if (!bot._client.ended) bot._client.end(); } catch (e) { }
+          }, 500);
+        }
+      } catch (err) { }
     }
+
+    updateBotStatus(botName, { status: 'disconnected', message: 'Manual disconnect' });
   });
-  
+
   socket.on('connect-all-bots', async (data) => {
     try {
       const bots = await loadOrCreateFile(BOTS_FILE, []);
       const { version } = data || {};
-      
+
       for (const botData of bots) {
         if (!activeBots.has(botData.username)) {
           setTimeout(() => {
@@ -719,48 +838,51 @@ io.on('connection', (socket) => {
       socket.emit('bot-error', { error: err.message });
     }
   });
-  
+
   socket.on('disconnect-all-bots', () => {
     for (const [botName, bot] of activeBots.entries()) {
       const timers = botTimers.get(botName) || {};
-      if(timers.reconnect) clearTimeout(timers.reconnect);
-      
-      try { bot.quit(); } catch (err) {}
+      if (timers.reconnect) clearTimeout(timers.reconnect);
+
+      try { bot.quit(); } catch (err) { }
       cleanupBot(botName);
-      
+
       const status = { botName, status: 'disconnected', message: 'Manual disconnect (all)' };
       io.emit('bot-status', status);
       logEvent({ type: 'bot-status', ...status });
     }
     activeBots.clear();
   });
-  
+
   socket.on('send-chat', (data) => {
     const { botName, message } = data;
     const bot = activeBots.get(botName);
     if (bot && !bot._client.ended) {
-      try { bot.chat(message); } catch (err) {}
+      try {
+        bot.chat(message);
+        io.emit('bot-chat', { botName, username: 'You', message: `[SENT] ${message}` });
+      } catch (err) { }
     }
   });
-  
+
   socket.on('send-spam', (data) => {
     const { botName, message, delay, enable } = data;
     const bot = activeBots.get(botName);
     const timers = botTimers.get(botName);
     if (!bot || !timers) return;
-    
+
     if (timers.spam) {
       clearInterval(timers.spam);
       timers.spam = null;
     }
-    
+
     if (enable && message) {
       timers.spam = setInterval(() => {
         if (!activeBots.has(botName) || !bot || bot._client.ended) {
           clearInterval(timers.spam);
           return;
         }
-        try { bot.chat(message); } catch (err) {}
+        try { bot.chat(message); } catch (err) { }
       }, (delay || 20) * 1000);
     }
   });
@@ -777,7 +899,7 @@ io.on('connection', (socket) => {
             bot.setControlState(control, false);
           });
           if (option !== 'stop') {
-             bot.setControlState(option, true);
+            bot.setControlState(option, true);
           }
           break;
         case 'jump':
@@ -792,29 +914,29 @@ io.on('connection', (socket) => {
           bot.swingArm();
           break;
       }
-    } catch(e) {
+    } catch (e) {
       console.log(e)
     }
   });
-  
+
   socket.on('disconnect', () => console.log('Client disconnected:', socket.id));
 });
 
 process.on('SIGINT', () => {
   console.log('Shutting down...');
   for (const [botName, bot] of activeBots.entries()) {
-    try { bot.quit(); cleanupBot(botName); } catch (err) {}
+    try { bot.quit(); cleanupBot(botName); } catch (err) { }
   }
   process.exit(0);
 });
 
 process.on('uncaughtException', (err) => {
   const msg = err.message || '';
-  if (msg.includes('unknown chat format code') || 
-      msg.includes('PartialReadError') ||
-      msg.includes('Unexpected buffer end') ||
-      msg.includes('partial packet') ||
-      msg.includes('Chunk size is')) {
+  if (msg.includes('unknown chat format code') ||
+    msg.includes('PartialReadError') ||
+    msg.includes('Unexpected buffer end') ||
+    msg.includes('partial packet') ||
+    msg.includes('Chunk size is')) {
     return;
   }
   console.error('Uncaught Exception:', err);
@@ -822,10 +944,10 @@ process.on('uncaughtException', (err) => {
 
 process.on('unhandledRejection', (reason, promise) => {
   const msg = reason?.message || reason?.toString() || '';
-  if (msg.includes('PartialReadError') || 
-      msg.includes('Unexpected buffer end') ||
-      msg.includes('partial packet') ||
-      msg.includes('Chunk size is')) {
+  if (msg.includes('PartialReadError') ||
+    msg.includes('Unexpected buffer end') ||
+    msg.includes('partial packet') ||
+    msg.includes('Chunk size is')) {
     return;
   }
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);

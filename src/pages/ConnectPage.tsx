@@ -92,7 +92,9 @@ export default function ConnectPage() {
 
   const handleConnectAll = () => {
     bots.forEach(bot => {
-      if (botStatuses[bot.username]?.status !== 'connected') {
+      const status = botStatuses[bot.username]?.status;
+      const isActive = status && (status === 'connected' || status === 'spawned' || status === 'connecting');
+      if (!isActive) {
         connectBot(bot.username, serverInfo.version);
       }
     });
@@ -100,10 +102,9 @@ export default function ConnectPage() {
 
   const handleDisconnectAll = () => {
     bots.forEach(bot => {
-      if (botStatuses[bot.username]?.status === 'connected') {
-        disconnectBot(bot.username);
-      }
+      disconnectBot(bot.username);
     });
+    toast.success('Disconnect signal sent to all bots');
   };
 
   const handleAddBot = async (bot: BotAccount) => {
@@ -197,7 +198,10 @@ export default function ConnectPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          if (isOnline) {
+                          const status = botStatuses[bot.username]?.status;
+                          const isActive = status && (status === 'connected' || status === 'spawned' || status === 'connecting');
+
+                          if (isActive) {
                             disconnectBot(bot.username);
                           } else {
                             connectBot(bot.username, serverInfo.version);

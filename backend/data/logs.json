@@ -2,36 +2,8 @@
   {
     "type": "bot-status",
     "botName": "syzdark",
-    "status": "connected",
-    "message": "Connected",
-    "timestamp": "2026-01-09T04:46:22.374Z"
-  },
-  {
-    "type": "bot-status",
-    "botName": "syzdark",
     "status": "disconnected",
-    "message": "Disconnected",
-    "timestamp": "2026-01-09T04:46:22.997Z"
-  },
-  {
-    "type": "bot-chat",
-    "botName": "syzdark",
-    "username": "Server",
-    "message": "Right click the Server Selector to join a gamemode.",
-    "timestamp": "2026-01-09T04:46:23.539Z"
-  },
-  {
-    "type": "bot-status",
-    "botName": "syzdark",
-    "status": "spawned",
-    "message": "Spawned",
-    "timestamp": "2026-01-09T04:46:23.703Z"
-  },
-  {
-    "type": "bot-status",
-    "botName": "syzdark",
-    "status": "disconnected",
-    "message": "Disconnected: disconnect.quitting",
-    "timestamp": "2026-01-09T04:46:24.190Z"
+    "message": "Manual disconnect",
+    "timestamp": "2026-01-25T22:27:34.464Z"
   }
 ]

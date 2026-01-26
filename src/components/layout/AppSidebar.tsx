@@ -7,11 +7,13 @@ import {
   Move,
   Settings,
   Info,
-  Terminal
+  Terminal,
+  LayoutDashboard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/', label: 'Connection', icon: Plug },
   { path: '/chat', label: 'Chat', icon: MessageSquare },
   { path: '/accounts', label: 'Accounts', icon: Users },
