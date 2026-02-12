@@ -74,20 +74,10 @@ The frontend provides the user interface.
 ---
 
 ## Changelog
+CHANGELOGS HERE
+http://wac.vaizer.cl/
 
-### v26.1.1 — The "Frontend Polishment" Update
-- **Full State Persistence**: Bot statuses, health, experience, and inventories now persist reliably across page refreshes.
-- **Bot Status Persistence**: Dashboard page is now here where you can see health, experience, hunger bar and inventory of your bots.
-- **Chat History Persistence**: Chat messages are now saved in local storage, so they remain visible after a reload.
-- **Enhanced Disconnection**:
-    - Added a functional Leave button to Dashboard cards.
-    - Fixed the Power button on the Connect page to handle all active bot states (spawned, connecting).
-    - Improved Disconnect All robustness to ensure all bots leave consistently.
-- **Real-time Sync**: Implemented an explicit state sync mechanism between backend and frontend.
-- **Bug Fixes**:
-    - Fixed historic chat messages incorrectly displaying Server as the username.
-    - Added granular backend logging for better event tracing.
-    - Fixed a React hook violation in the Dashboard component.
+
 
 ---
 
@@ -108,7 +98,8 @@ This project is licensed under the BSD-3-Clause license.
 # PREVIEW
 
 IMG BY SYZDARK
-<img width="1915" height="958" alt="image" src="https://github.com/user-attachments/assets/f8d11a6e-9357-4151-932a-d2ba2fb32dd5" />
+<img width="1785" height="955" alt="image" src="https://github.com/user-attachments/assets/4e9c7161-504f-4cb1-a746-2fa69f411bd1" />
+
 
 ## Disclaimer
 
