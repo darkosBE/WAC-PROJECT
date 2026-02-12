@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web AFK Client - Development Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(var(--border))",
+                        input: "hsl(var(--input))",
+                        ring: "hsl(var(--ring))",
+                        background: "hsl(var(--background))",
+                        foreground: "hsl(var(--foreground))",
+                        primary: {
+                            DEFAULT: "hsl(var(--primary))",
+                            foreground: "hsl(var(--primary-foreground))",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(var(--secondary))",
+                            foreground: "hsl(var(--secondary-foreground))",
+                        },
+                        destructive: {
+                            DEFAULT: "hsl(var(--destructive))",
+                            foreground: "hsl(var(--destructive-foreground))",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(var(--muted))",
+                            foreground: "hsl(var(--muted-foreground))",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(var(--accent))",
+                            foreground: "hsl(var(--accent-foreground))",
+                        },
+                        card: {
+                            DEFAULT: "hsl(var(--card))",
+                            foreground: "hsl(var(--card-foreground))",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "var(--radius)",
+                        md: "calc(var(--radius) - 2px)",
+                        sm: "calc(var(--radius) - 4px)",
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --background: 0 0% 100%;
+                --foreground: 222.2 84% 4.9%;
+                --card: 0 0% 100%;
+                --card-foreground: 222.2 84% 4.9%;
+                --popover: 0 0% 100%;
+                --popover-foreground: 222.2 84% 4.9%;
+                --primary: 221.2 83.2% 53.3%;
+                --primary-foreground: 210 40% 98%;
+                --secondary: 210 40% 96.1%;
+                --secondary-foreground: 222.2 47.4% 11.2%;
+                --muted: 210 40% 96.1%;
+                --muted-foreground: 215.4 16.3% 46.9%;
+                --accent: 210 40% 96.1%;
+                --accent-foreground: 222.2 47.4% 11.2%;
+                --destructive: 0 84.2% 60.2%;
+                --destructive-foreground: 210 40% 98%;
+                --border: 214.3 31.8% 91.4%;
+                --input: 214.3 31.8% 91.4%;
+                --ring: 221.2 83.2% 53.3%;
+                --radius: 0.5rem;
+            }
+
+            .dark {
+                --background: 222.2 84% 4.9%;
+                --foreground: 210 40% 98%;
+                --card: 222.2 84% 4.9%;
+                --card-foreground: 210 40% 98%;
+                --popover: 222.2 84% 4.9%;
+                --popover-foreground: 210 40% 98%;
+                --primary: 217.2 91.2% 59.8%;
+                --primary-foreground: 222.2 47.4% 11.2%;
+                --secondary: 217.2 32.6% 17.5%;
+                --secondary-foreground: 210 40% 98%;
+                --muted: 217.2 32.6% 17.5%;
+                --muted-foreground: 215 20.2% 65.1%;
+                --accent: 217.2 32.6% 17.5%;
+                --accent-foreground: 210 40% 98%;
+                --destructive: 0 62.8% 30.6%;
+                --destructive-foreground: 210 40% 98%;
+                --border: 217.2 32.6% 17.5%;
+                --input: 217.2 32.6% 17.5%;
+                --ring: 224.3 76.3% 48%;
+            }
+        }
+    </style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .code-block {
+            @apply bg-muted rounded-lg p-4 font-mono text-sm border border-border;
+        }
+
+        .warning-box {
+            @apply bg-yellow-50 dark:bg-yellow-950/30 border-l-4 border-yellow-500 p-4 rounded-r-lg;
+        }
+
+        .danger-box {
+            @apply bg-red-50 dark:bg-red-950/30 border-l-4 border-red-500 p-4 rounded-r-lg;
+        }
+
+        .info-box {
+            @apply bg-blue-50 dark:bg-blue-950/30 border-l-4 border-blue-500 p-4 rounded-r-lg;
+        }
+
+        .success-box {
+            @apply bg-green-50 dark:bg-green-950/30 border-l-4 border-green-500 p-4 rounded-r-lg;
+        }
+
+        .section-card {
+            @apply bg-card border border-border rounded-lg p-6 shadow-sm;
+        }
+
+        .changelog-item {
+            @apply flex gap-3 pb-4 border-b border-border last:border-0 last:pb-0;
+        }
+
+        .feature-tag {
+            @apply inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-secondary text-secondary-foreground;
+        }
+
+        .version-badge {
+            @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-primary/10 text-primary border border-primary/20;
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground min-h-screen">
+    <!-- Navigation -->
+    <nav class="border-b border-border bg-card sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                        <i class="fas fa-flask text-primary text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg text-foreground">Web AFK Client</h1>
+                        <p class="text-xs text-muted-foreground">Development Edition</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="version-badge">
+                        <i class="fas fa-code-branch mr-2"></i>
+                        v26.2.0-dev
+                    </span>
+                    <a href="https://github.com" class="text-muted-foreground hover:text-foreground transition-colors">
+                        <i class="fab fa-github text-xl"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="bg-card border-b border-border">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="text-center">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-100 dark:bg-orange-950/50 border border-orange-300 dark:border-orange-800 text-orange-700 dark:text-orange-400 text-sm font-semibold mb-6">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Development Build — Unstable</span>
+                </div>
+                <h1 class="text-4xl sm:text-5xl font-bold text-foreground mb-4">
+                    Development Distribution
+                </h1>
+                <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
+                    Welcome to the dedicated workspace for testing the latest features, bug fixes, and experimental enhancements before they reach the main release.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+        
+        <!-- Caution Section -->
+        <section>
+            <div class="danger-box">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-exclamation-circle text-red-500 text-xl mt-0.5"></i>
+                    <div>
+                        <h3 class="font-bold text-red-700 dark:text-red-400 mb-2">Caution</h3>
+                        <p class="text-red-600 dark:text-red-300 text-sm leading-relaxed">
+                            <strong>UNSTABLE BUILD:</strong> This version is for testing and development purposes only. It may contain critical bugs, performance issues, or incomplete features. <strong>Do not use this build for production environments or critical AFK tasks.</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- What is this Build? -->
+        <section class="section-card">
+            <h2 class="text-2xl font-bold text-foreground mb-4 flex items-center gap-3">
+                <i class="fas fa-question-circle text-primary"></i>
+                What is this Build?
+            </h2>
+            <p class="text-muted-foreground mb-6 leading-relaxed">
+                This page hosts the latest iteration of our technical roadmap. We use this build to "stress-test" new logic and gather feedback on UI/UX changes.
+            </p>
+            
+            <div class="grid md:grid-cols-3 gap-4">
+                <div class="p-4 bg-muted/50 rounded-lg border border-border">
+                    <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-950/50 border border-blue-300 dark:border-blue-800 flex items-center justify-center mb-3">
+                        <i class="fas fa-microchip text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                    <h3 class="font-semibold text-foreground mb-2">Experimental Logic</h3>
+                    <p class="text-sm text-muted-foreground">Test new socket event handlers and state sync mechanisms.</p>
+                </div>
+                
+                <div class="p-4 bg-muted/50 rounded-lg border border-border">
+                    <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-950/50 border border-purple-300 dark:border-purple-800 flex items-center justify-center mb-3">
+                        <i class="fas fa-paint-brush text-purple-600 dark:text-purple-400"></i>
+                    </div>
+                    <h3 class="font-semibold text-foreground mb-2">Cutting-Edge UI</h3>
+                    <p class="text-sm text-muted-foreground">Preview upcoming dashboard layouts and interactive components.</p>
+                </div>
+                
+                <div class="p-4 bg-muted/50 rounded-lg border border-border">
+                    <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-950/50 border border-green-300 dark:border-green-800 flex items-center justify-center mb-3">
+                        <i class="fas fa-bug text-green-600 dark:text-green-400"></i>
+                    </div>
+                    <h3 class="font-semibold text-foreground mb-2">Enhanced Debugging</h3>
+                    <p class="text-sm text-muted-foreground">Granular logging enabled by default on the backend for easier tracing.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Architecture -->
+        <section class="section-card">
+            <h2 class="text-2xl font-bold text-foreground mb-4 flex items-center gap-3">
+                <i class="fas fa-sitemap text-primary"></i>
+                Technical Architecture
+            </h2>
+            <p class="text-muted-foreground leading-relaxed mb-6">
+                The Web AFK Client uses a decoupled architecture to ensure stability and performance. The backend acts as a persistent "Headless Client" while the frontend provides a reactive interface.
+            </p>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="p-5 bg-muted/30 rounded-lg border border-border">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                            <i class="fas fa-server text-primary text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-foreground">Backend</h3>
+                            <p class="text-xs text-muted-foreground">Headless Client</p>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 text-sm text-muted-foreground">
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-check text-green-500 text-xs"></i>
+                            <span>Minecraft bot management via Mineflayer</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-check text-green-500 text-xs"></i>
+                            <span>Socket.IO for real-time communication</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-check text-green-500 text-xs"></i>
+                            <span>Persistent data storage (JSON)</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-check text-green-500 text-xs"></i>
+                            <span>REST API for configuration</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="p-5 bg-muted/30 rounded-lg border border-border">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-secondary border border-border flex items-center justify-center">
+                            <i class="fas fa-desktop text-secondary-foreground text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-foreground">Frontend</h3>
+                            <p class="text-xs text-muted-foreground">Reactive Interface</p>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 text-sm text-muted-foreground">
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-check text-green-500 text-xs"></i>
+                            <span>React + TypeScript</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-check text-green-500 text-xs"></i>
+                            <span>Tailwind CSS for styling</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-check text-green-500 text-xs"></i>
+                            <span>Real-time dashboard updates</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-check text-green-500 text-xs"></i>
+                            <span>Responsive design</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Roadmap -->
+        <section class="section-card">
+            <h2 class="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
+                <i class="fas fa-road text-primary"></i>
+                Feature Roadmap
+            </h2>
+            <p class="text-muted-foreground mb-6">
+                Active development is focused on the following areas:
+            </p>
+
+            <div class="space-y-8">
+                <!-- Near Term -->
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="feature-tag bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border border-blue-300 dark:border-blue-800">
+                            Near Term
+                        </span>
+                        <span class="text-sm font-semibold text-foreground">v26.2.0</span>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border">
+                            <i class="fas fa-utensils text-orange-500 mt-1"></i>
+                            <div>
+                                <h4 class="font-semibold text-foreground text-sm">Auto-Eating</h4>
+                                <p class="text-xs text-muted-foreground mt-1">Integrated hunger management using food in inventory.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border">
+                            <i class="fas fa-icons text-purple-500 mt-1"></i>
+                            <div>
+                                <h4 class="font-semibold text-foreground text-sm">Inventory Icons</h4>
+                                <p class="text-xs text-muted-foreground mt-1">Visual representation of items in the dashboard.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border">
+                            <i class="fas fa-walking text-green-500 mt-1"></i>
+                            <div>
+                                <h4 class="font-semibold text-foreground text-sm">Improved Movement</h4>
+                                <p class="text-xs text-muted-foreground mt-1">Pathfinding-based movement for complex obstacles.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Future Vision -->
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="feature-tag bg-purple-100 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 border border-purple-300 dark:border-purple-800">
+                            Future Vision
+                        </span>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border">
+                            <i class="fas fa-code text-blue-500 mt-1"></i>
+                            <div>
+                                <h4 class="font-semibold text-foreground text-sm">Lua Scripting</h4>
+                                <p class="text-xs text-muted-foreground mt-1">Create custom behavior scripts for bots.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border">
+                            <i class="fas fa-plug text-green-500 mt-1"></i>
+                            <div>
+                                <h4 class="font-semibold text-foreground text-sm">Plugin System</h4>
+                                <p class="text-xs text-muted-foreground mt-1">Modular extensions for specialized server tasks.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border">
+                            <i class="fas fa-network-wired text-indigo-500 mt-1"></i>
+                            <div>
+                                <h4 class="font-semibold text-foreground text-sm">Multi-Server Sync</h4>
+                                <p class="text-xs text-muted-foreground mt-1">Coordinate groups of bots across different instances.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Changelog -->
+        <section class="section-card">
+            <h2 class="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
+                <i class="fas fa-history text-primary"></i>
+                Recent Changelog
+            </h2>
+
+            <div class="space-y-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="version-badge">
+                        v26.1.1
+                    </span>
+                    <span class="text-muted-foreground">— The "Frontend Polishment" Update</span>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- System Synchronization -->
+                    <div>
+                        <h3 class="font-semibold text-foreground mb-3 flex items-center gap-2">
+                            <i class="fas fa-sync text-blue-500"></i>
+                            System Synchronization
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="changelog-item">
+                                <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium text-foreground text-sm">Full State Persistence</h4>
+                                    <p class="text-sm text-muted-foreground">Bot statuses, health, experience, and inventories now persist reliably across page refreshes using an explicit backend-to-frontend sync.</p>
+                                </div>
+                            </div>
+                            <div class="changelog-item">
+                                <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium text-foreground text-sm">Real-time Sync</h4>
+                                    <p class="text-sm text-muted-foreground">Implemented a robust state synchronization mechanism to ensure the UI always reflects the actual bot state on the server.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard & UI -->
+                    <div>
+                        <h3 class="font-semibold text-foreground mb-3 flex items-center gap-2">
+                            <i class="fas fa-desktop text-purple-500"></i>
+                            Dashboard & UI
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="changelog-item">
+                                <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium text-foreground text-sm">Persistent Dashboard</h4>
+                                    <p class="text-sm text-muted-foreground">You can now view health, experience, hunger, and inventory data that survives browser reloads.</p>
+                                </div>
+                            </div>
+                            <div class="changelog-item">
+                                <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium text-foreground text-sm">Chat History</h4>
+                                    <p class="text-sm text-muted-foreground">Messages are now cached in localStorage to prevent data loss during accidental refreshes.</p>
+                                </div>
+                            </div>
+                            <div class="changelog-item">
+                                <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium text-foreground text-sm">Functional Controls</h4>
+                                    <p class="text-sm text-muted-foreground">Added a dedicated Leave button to Dashboard cards for easier management.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stability Fixes -->
+                    <div>
+                        <h3 class="font-semibold text-foreground mb-3 flex items-center gap-2">
+                            <i class="fas fa-wrench text-orange-500"></i>
+                            Stability Fixes
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="changelog-item">
+                                <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium text-foreground text-sm">Power Button Fix</h4>
+                                    <p class="text-sm text-muted-foreground">Resolved issues where the power button on the Connect page failed to handle "spawned" or "connecting" states correctly.</p>
+                                </div>
+                            </div>
+                            <div class="changelog-item">
+                                <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium text-foreground text-sm">Disconnect Robustness</h4>
+                                    <p class="text-sm text-muted-foreground">Re-engineered the "Disconnect All" logic to ensure all active sessions are terminated cleanly.</p>
+                                </div>
+                            </div>
+                            <div class="changelog-item">
+                                <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium text-foreground text-sm">Username Fix</h4>
+                                    <p class="text-sm text-muted-foreground">Fixed a bug where historic chat messages incorrectly displayed "Server" as the sender.</p>
+                                </div>
+                            </div>
+                            <div class="changelog-item">
+                                <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium text-foreground text-sm">Hook Optimization</h4>
+                                    <p class="text-sm text-muted-foreground">Fixed a React hook violation in the Dashboard component to prevent rendering artifacts.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How to Run Development -->
+        <section class="section-card">
+            <h2 class="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
+                <i class="fas fa-terminal text-primary"></i>
+                How to Run Development
+            </h2>
+            <p class="text-muted-foreground mb-6">
+                To get started with this specific build, follow the steps below:
+            </p>
+
+            <div class="space-y-6">
+                <!-- Backend -->
+                <div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold">1</span>
+                        <h3 class="font-semibold text-foreground">Backend (Debugger Mode)</h3>
+                    </div>
+                    <div class="code-block">
+                        <div class="flex items-center justify-between mb-3 pb-2 border-b border-border/50">
+                            <span class="text-xs text-muted-foreground uppercase tracking-wider">Terminal</span>
+                            <button class="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                                <i class="far fa-copy mr-1"></i>Copy
+                            </button>
+                        </div>
+                        <div class="space-y-1 text-foreground">
+                            <p><span class="text-primary">$</span> cd backend</p>
+                            <p><span class="text-primary">$</span> npm install</p>
+                            <p><span class="text-primary">$</span> npm run dev <span class="text-muted-foreground"># Starts with enhanced logging enabled</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Frontend -->
+                <div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-secondary-foreground font-bold">2</span>
+                        <h3 class="font-semibold text-foreground">Frontend (Hot Reload)</h3>
+                    </div>
+                    <div class="code-block">
+                        <div class="flex items-center justify-between mb-3 pb-2 border-b border-border/50">
+                            <span class="text-xs text-muted-foreground uppercase tracking-wider">Terminal</span>
+                            <button class="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                                <i class="far fa-copy mr-1"></i>Copy
+                            </button>
+                        </div>
+                        <div class="space-y-1 text-foreground">
+                            <p><span class="text-primary">$</span> npm install</p>
+                            <p><span class="text-primary">$</span> npm run dev</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-muted-foreground mt-3">
+                        The dev server will typically run on <code class="bg-muted px-2 py-0.5 rounded text-xs">http://localhost:8080</code>.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contributing & Feedback -->
+        <section class="section-card">
+            <h2 class="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
+                <i class="fas fa-comments text-primary"></i>
+                Contributing & Feedback
+            </h2>
+            <p class="text-muted-foreground mb-6">
+                We rely on your feedback to make the stable release better!
+            </p>
+
+            <div class="grid md:grid-cols-3 gap-4">
+                <div class="info-box !bg-blue-50 dark:!bg-blue-950/20">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-bug text-blue-500 text-lg mt-0.5"></i>
+                        <div>
+                            <h4 class="font-semibold text-foreground mb-1">Found a bug?</h4>
+                            <p class="text-sm text-muted-foreground">Open an issue with the prefix <code class="text-xs bg-blue-100 dark:bg-blue-900 px-1.5 py-0.5 rounded">[DEV-BUILD]</code> in the title.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="success-box !bg-green-50 dark:!bg-green-950/20">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-lightbulb text-green-500 text-lg mt-0.5"></i>
+                        <div>
+                            <h4 class="font-semibold text-foreground mb-1">Feature Idea?</h4>
+                            <p class="text-sm text-muted-foreground">Start a discussion or submit a Pull Request on GitHub.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box !bg-yellow-50 dark:!bg-yellow-950/20">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-file-alt text-yellow-600 dark:text-yellow-400 text-lg mt-0.5"></i>
+                        <div>
+                            <h4 class="font-semibold text-foreground mb-1">Logs</h4>
+                            <p class="text-sm text-muted-foreground">If the app crashes, please provide the backend console output.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-border bg-card mt-12">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                        <i class="fas fa-code text-primary"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-foreground">Built with passion by SyzDark</p>
+                        <p class="text-xs text-muted-foreground">Advancing the future of Minecraft account management.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 text-muted-foreground">
+                    <a href="#" class="hover:text-foreground transition-colors">
+                        <i class="fab fa-github text-xl"></i>
+                    </a>
+                    <a href="#" class="hover:text-foreground transition-colors">
+                        <i class="fab fa-discord text-xl"></i>
+                    </a>
+                    <a href="#" class="hover:text-foreground transition-colors">
+                        <i class="fab fa-twitter text-xl"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme toggle functionality
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</body>
+</html>
