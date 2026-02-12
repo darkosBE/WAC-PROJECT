@@ -109,7 +109,7 @@ This project is a **fan-made** tool designed for technical Minecraft players. It
 
 - I have another repo for development builds and it may have a lot of bugs. It may break old code.
 - TOTAL DEVELOPMENT BUILDS
-- COUNTER: [1]
+- COUNTER: [2]
 - Check out the [Development Build Guide](DEVELOPMENT_BUILD.MD) for technical breakdowns.
 
 ### DEVELOPMENT REPO
