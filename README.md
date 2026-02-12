@@ -73,21 +73,12 @@ The frontend provides the user interface.
 
 ---
 
-## Changelog
+### Changelog
 
-### v26.1.1 — The "Frontend Polishment" Update
-- **Full State Persistence**: Bot statuses, health, experience, and inventories now persist reliably across page refreshes.
-- **Bot Status Persistence**: Dashboard page is now here where you can see health, experience, hunger bar and inventory of your bots.
-- **Chat History Persistence**: Chat messages are now saved in local storage, so they remain visible after a reload.
-- **Enhanced Disconnection**:
-    - Added a functional Leave button to Dashboard cards.
-    - Fixed the Power button on the Connect page to handle all active bot states (spawned, connecting).
-    - Improved Disconnect All robustness to ensure all bots leave consistently.
-- **Real-time Sync**: Implemented an explicit state sync mechanism between backend and frontend.
-- **Bug Fixes**:
-    - Fixed historic chat messages incorrectly displaying Server as the username.
-    - Added granular backend logging for better event tracing.
-    - Fixed a React hook violation in the Dashboard component.
+v26.2.1
+
+### CHANGELOGS HERE
+http://wac.vaizer.cl/
 
 ---
 
@@ -130,3 +121,4 @@ This project is a **fan-made** tool designed for technical Minecraft players. It
 <p align="center">
   Made with passion by <b>SyzDark</b>
 </p>
+
