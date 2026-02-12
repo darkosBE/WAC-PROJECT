@@ -2,58 +2,140 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @layer base {
   :root {
-    --background: 0 0% 5%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 142 71% 45%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 95%;
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 18%;
-    --input: 0 0% 12%;
-    --ring: 142 71% 45%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
+    --radius: 0.5rem;
   }
 
   .dark {
-    --background: 0 0% 5%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 142 71% 45%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 95%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 18%;
-    --input: 0 0% 12%;
-    --ring: 142 71% 45%;
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 6%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 224 76% 48%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  /* Clean Card Style */
+  .glass-card {
+    @apply bg-card border border-border shadow-sm;
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-200;
+    @apply hover:border-primary/50 hover:shadow-md;
+  }
+
+  /* Clean Text Style */
+  .text-brand {
+    @apply text-primary font-semibold;
+  }
+
+  /* Status Indicators - Clean */
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+
+  .status-dot-online {
+    @apply status-dot bg-green-500;
+  }
+
+  .status-dot-offline {
+    @apply status-dot bg-red-500;
+  }
+
+  .status-dot-connecting {
+    @apply status-dot bg-yellow-500;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Card Hover - Clean */
+  .card-lift {
+    @apply transition-all duration-200;
+  }
+
+  .card-lift:hover {
+    @apply -translate-y-0.5 shadow-md;
+  }
+
+  /* Sidebar Navigation - Clean */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200;
+    @apply text-muted-foreground hover:text-foreground hover:bg-muted;
+  }
+
+  .nav-item-active {
+    @apply nav-item bg-primary/10 text-primary border-l-2 border-primary;
+  }
+
+  /* Button Clean Style */
+  .btn-clean {
+    @apply relative overflow-hidden transition-all duration-200;
+  }
+
+  /* Grid Pattern - Subtle */
+  .grid-bg {
+    background-image: 
+      linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .dark .grid-bg {
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   }
 }
 
@@ -65,6 +147,7 @@
   
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
   }
   
   .scrollbar-thin::-webkit-scrollbar-track {
@@ -76,10 +159,171 @@
     border-radius: 3px;
   }
 
-  .animation-delay-200 {
-    animation-delay: 200ms;
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground));
   }
-  .animation-delay-400 {
-    animation-delay: 400ms;
+
+  /* Animation Delays */
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+  .animation-delay-400 { animation-delay: 400ms; }
+  .animation-delay-500 { animation-delay: 500ms; }
+
+  /* Font Utilities */
+  .font-mono-code {
+    font-family: 'JetBrains Mono', monospace;
   }
+}
+
+/* Keyframe Animations - Clean */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animation Classes */
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out forwards;
+}
+
+/* Page Transitions */
+.page-transition-enter {
+  opacity: 0;
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+/* Custom Scrollbar for Code Blocks */
+pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+pre::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+pre::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}
+
+/* Input Focus Effects - Clean */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--primary)/0.2);
+}
+
+/* Status Badge - Clean */
+.status-badge {
+  @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium;
+}
+
+.status-badge-online {
+  @apply status-badge bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400;
+}
+
+.status-badge-offline {
+  @apply status-badge bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400;
+}
+
+.status-badge-connecting {
+  @apply status-badge bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400;
+}
+
+/* Inventory Slot - Clean */
+.inventory-slot {
+  @apply aspect-square rounded border flex items-center justify-center;
+  @apply bg-muted/50 border-border;
+  @apply transition-all duration-150;
+}
+
+.inventory-slot:hover {
+  @apply bg-muted border-muted-foreground/30;
+}
+
+.inventory-slot-filled {
+  @apply inventory-slot bg-primary/5 border-primary/30;
+}
+
+.inventory-slot-filled:hover {
+  @apply bg-primary/10 border-primary/50;
+}
+
+/* Stats Card - Clean */
+.stats-card {
+  @apply glass-card p-5 rounded-lg;
+  @apply transition-all duration-200;
+}
+
+.stats-card:hover {
+  @apply border-primary/30 shadow-sm;
+}
+
+.stats-card-icon {
+  @apply w-10 h-10 rounded-lg flex items-center justify-center;
+  @apply bg-primary/10 text-primary;
+}
+
+/* Bot Card - Clean */
+.bot-card {
+  @apply glass-card rounded-lg overflow-hidden;
+  @apply transition-all duration-200;
+}
+
+.bot-card:hover {
+  @apply border-primary/30 shadow-sm;
+}
+
+.bot-card-header {
+  @apply flex items-center justify-between p-4;
+  @apply border-b border-border bg-muted/30;
+}
+
+/* Terminal Style - Clean */
+.terminal {
+  @apply font-mono-code bg-muted rounded-lg p-4;
+  @apply border border-border;
+}
+
+.terminal-line {
+  @apply flex items-center gap-2 text-sm;
+}
+
+.terminal-prompt {
+  @apply text-primary font-bold;
 }
